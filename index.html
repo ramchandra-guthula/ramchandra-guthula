@@ -1,1268 +1,309 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RamGuthula - Personal Portfolio</title>
+  <title>Ram Guthula | Cloud Architect, DevOps Educator, and Platform Engineering Creator</title>
+  <meta name="description" content="Ram Guthula shares practical cloud architecture, DevOps, Kubernetes, Terraform, and platform engineering content for teams building reliable modern systems.">
+  <meta name="keywords" content="Ram Guthula, cloud architect, DevOps, platform engineering, Kubernetes, Terraform, AWS, Azure, GCP, SRE, creator">
+  <meta name="author" content="Ram Guthula">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#0b1220">
+  <link rel="canonical" href="https://www.ramguthula.com/">
+  <link rel="alternate" type="application/rss+xml" title="Ram Guthula Feed" href="https://www.ramguthula.com/feed.xml">
 
-  <!--
-    - favicon
-  -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Ram Guthula | Cloud Architect, DevOps Educator, and Platform Engineering Creator">
+  <meta property="og:description" content="Practical cloud, DevOps, Kubernetes, and platform engineering content for builders, teams, and hiring managers.">
+  <meta property="og:url" content="https://www.ramguthula.com/">
+  <meta property="og:image" content="https://www.ramguthula.com/github-header-image.png">
+  <meta property="og:site_name" content="Ram Guthula">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Ram Guthula | Cloud Architect, DevOps Educator, and Platform Engineering Creator">
+  <meta name="twitter:description" content="Cloud architecture, DevOps, Kubernetes, Terraform, and platform engineering resources from Ram Guthula.">
+  <meta name="twitter:image" content="https://www.ramguthula.com/github-header-image.png">
+
   <link rel="shortcut icon" href="./assets/images/logo.ico" type="image/x-icon">
-
-  <!--
-    - custom css link
-  -->
-  <link rel="stylesheet" href="./assets/css/style.css">
-
-  <!--
-    - google font link
-  -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/css/style.css">
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Ram Guthula",
+      "url": "https://www.ramguthula.com/",
+      "image": "https://www.ramguthula.com/assets/images/my-avatar.png",
+      "jobTitle": "Cloud Architect and DevOps Educator",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Austin",
+        "addressRegion": "Texas",
+        "addressCountry": "US"
+      },
+      "email": "mailto:ramchandra.cloud@gmail.com",
+      "sameAs": [
+        "https://www.linkedin.com/in/ramchandra-guthula/",
+        "https://github.com/ramchandra-guthula",
+        "https://twitter.com/me_ramguthula"
+      ],
+      "knowsAbout": [
+        "Cloud Architecture",
+        "DevOps",
+        "Platform Engineering",
+        "Kubernetes",
+        "Terraform",
+        "Site Reliability Engineering",
+        "AWS",
+        "Azure",
+        "Google Cloud"
+      ]
+    }
+  </script>
 </head>
-
 <body>
+  <div class="page-shell"></div>
 
-  <!--
-    - #MAIN
-  -->
+  <main class="site-layout">
+    <aside class="sidebar" aria-label="Profile">
+      <div class="profile-card">
+        <img class="avatar" src="./assets/images/my-avatar.png" alt="Portrait of Ram Guthula" width="160" height="160">
+        <p class="eyebrow">Cloud Architect � DevOps Educator � Creator</p>
+        <h1>Ram Guthula</h1>
+        <p class="lede">
+          I turn platform engineering, cloud architecture, Kubernetes, and DevOps lessons into practical content teams can use right away.
+        </p>
 
-  <main>
-
-    <!--
-      - #SIDEBAR
-    -->
-
-    <aside class="sidebar" data-sidebar>
-
-      <div class="sidebar-info">
-
-        <figure class="avatar-box">
-          <img src="./assets/images/my-avatar.png" alt="Ram Guthula" width="30">
-        </figure>
-
-        <div class="info-content">
-          <h1 class="name" title="Ram Guthula">Ram Guthula</h1>
-
-          <p class="title">DevOps and Cloud Architect</p>
+        <div class="chip-list" aria-label="Topics">
+          <span class="chip">AWS</span>
+          <span class="chip">Azure</span>
+          <span class="chip">GCP</span>
+          <span class="chip">Kubernetes</span>
+          <span class="chip">Terraform</span>
+          <span class="chip">SRE</span>
         </div>
 
-        <button class="info_more-btn" data-sidebar-btn>
-          <span>Show Contacts</span>
-
-          <ion-icon name="chevron-down"></ion-icon>
-        </button>
-
+        <div class="action-row">
+          <a class="button button-primary" href="#content">Explore content</a>
+          <a class="button button-secondary" href="mailto:ramchandra.cloud@gmail.com">Work with me</a>
+        </div>
       </div>
 
-      <div class="sidebar-info_more">
-
-        <div class="separator"></div>
-
-        <ul class="contacts-list">
-
-          <li class="contact-item">
-
-            <div class="icon-box">
-              <ion-icon name="mail-outline"></ion-icon>
-            </div>
-
-            <div class="contact-info">
-              <p class="contact-title">Email</p>
-
-              <a href="mailto:ramchandra.cloud@gmail.com" class="contact-link">ramchandra.cloud@gmail.com</a>
-            </div>
-
-          </li>
-
-          <li class="contact-item">
-
-            <div class="icon-box">
-              <ion-icon name="calendar-outline"></ion-icon>
-            </div>
-
-            <div class="contact-info">
-              <p class="contact-title">Birthday</p>
-
-              <time datetime="1982-06-23">Sep 23, 1990</time>
-            </div>
-
-          </li>
-
-          <li class="contact-item">
-
-            <div class="icon-box">
-              <ion-icon name="location-outline"></ion-icon>
-            </div>
-
-            <div class="contact-info">
-              <p class="contact-title">Location</p>
-
-              <address>Austin, Texas, USA</address>
-            </div>
-
-          </li>
-
+      <section class="sidebar-section">
+        <h2>Quick profile</h2>
+        <ul class="info-list">
+          <li><span>Location</span><strong>Austin, Texas, USA</strong></li>
+          <li><span>Experience</span><strong>12+ years in cloud and DevOps</strong></li>
+          <li><span>Focus</span><strong>Platform engineering and content creation</strong></li>
+          <li><span>Email</span><strong><a href="mailto:ramchandra.cloud@gmail.com">ramchandra.cloud@gmail.com</a></strong></li>
         </ul>
+      </section>
 
-        <div class="separator"></div>
-
+      <section class="sidebar-section">
+        <h2>Find me</h2>
         <ul class="social-list">
-
-          <li class="social-item">
-            <a href="https://www.linkedin.com/in/ramchandra-guthula/" class="social-link">
-              <ion-icon name="logo-linkedin"></ion-icon>
-            </a>
-          </li>
-
-          <li class="social-item">
-            <a href="https://twitter.com/me_ramguthula" class="social-link">
-              <ion-icon name="logo-twitter"></ion-icon>
-            </a>
-          </li>
-          <li class="social-item">
-            <!-- <p align="center" > <img src="https://profile-counter.glitch.me/ramchandra-guthula/count.svg" style="font-family:georgia;color: chocolate;size: 0ch;" alt="ramchandra-guthula"/> </p> -->
-            <p align="left"> <img src="https://komarev.com/ghpvc/?username=ramchandra-guthula&label=Profile%20views&color=0e75b6&style=flat" alt="ramchandra-guthula" /> </p>
-          </li>
-
-          <!-- <li class="social-item">
-            <a href="" class="social-link">
-              <ion-icon name="logo-instagram"></ion-icon>
-            </a>
-          </li> -->
-
+          <li><a href="https://www.linkedin.com/in/ramchandra-guthula/" target="_blank" rel="noreferrer">LinkedIn</a></li>
+          <li><a href="https://github.com/ramchandra-guthula" target="_blank" rel="noreferrer">GitHub</a></li>
+          <li><a href="https://twitter.com/me_ramguthula" target="_blank" rel="noreferrer">X / Twitter</a></li>
         </ul>
-
-      </div>
-
+      </section>
     </aside>
 
-
-
-
-
-    <!--
-      - #main-content
-    -->
-
-    <div class="main-content">
-
-      <!--
-        - #NAVBAR
-      -->
-
-      <nav class="navbar">
-
-        <ul class="navbar-list">
-
-          <li class="navbar-item">
-            <button class="navbar-link  active" data-nav-link>About</button>
-          </li>
-
-          <li class="navbar-item">
-            <button class="navbar-link" data-nav-link>Resume</button>
-          </li>
-
-          <!-- <li class="navbar-item">
-            <button class="navbar-link" data-nav-link>Portfolio</button>
-          </li> -->
-
-          <li class="navbar-item">
-            <button class="navbar-link" data-nav-link>Blog</button>
-          </li>
-
-          <li class="navbar-item">
-            <button class="navbar-link" data-nav-link>Contact</button>
-          </li>
-
-        </ul>
-
+    <div class="main-panel">
+      <nav class="top-nav" aria-label="Primary">
+        <button class="nav-link active" type="button" data-nav-link="about">About</button>
+        <button class="nav-link" type="button" data-nav-link="content">Content</button>
+        <button class="nav-link" type="button" data-nav-link="resources">Resources</button>
+        <button class="nav-link" type="button" data-nav-link="contact">Contact</button>
       </nav>
 
-
-
-
-
-      <!--
-        - #ABOUT
-      -->
-
-      <article class="about  active" data-page="about">
-
-        <header>
-          <h2 class="h2 article-title">About me</h2>
-        </header>
-
-        <section class="about-text">
+      <article class="panel active" data-page="about" id="about">
+        <section class="hero-card">
+          <p class="section-kicker">Build, teach, and scale</p>
+          <h2>Helping teams learn modern cloud delivery without the fluff.</h2>
           <p>
-                  DevOps/Cloud Architect, utilizing my extensive experience in designing, implementing, and optimizing 
-            enterprise-scale solutions across cloud and on-premise environments. My goal is to develop and deploy robust 
-            and innovative application platforms that leverage the latest in Cloud technologies, 
-            containerization, and infrastructure-as-code principles. 
-          </p> 
-          <p>
-            Through collaboration, continuous improvement, 
-            and the implementation of best practices, I aspire to drive digital transformation and operational efficiency within organizations, 
-            fostering a culture of innovation and high performance that contributes to the overall success and growth of the company.
+            This site is evolving from a portfolio into a content hub for cloud, DevOps, and platform engineering. The goal is simple: publish useful lessons, reusable playbooks, and sharp technical breakdowns that earn repeat visits.
           </p>
         </section>
 
-
-        <!--
-          - service
-        -->
-
-        <section class="service">
-
-          <h3 class="h3 service-title">What I'm expertise in</h3>
-
-          <ul class="service-list">
-
-            <li class="service-item"> 
-              <div class="service-content-box">
-                <img src="./assets/images/cloud.svg" alt="design icon" width="40">                     
-              </div>
-              <div class="service-content-box">
-                <h4 class="h4 service-item-title">Cloud technologies</h4>
-
-                <p class="service-item-text">
-                  Experienced in designing AWS, Azure, and GCP cloud solutions encompassing compute, storage, networking, databases, analytics, security, IoT, AI/ML and migrating on-prem workloads
-                </p>
-              </div>
-
-            </li>
-
-            <li class="service-item">
-
-              <div class="service-icon-box">
-                <img src="./assets/images/devops-2.svg" alt="Devops Icon" width="40">
-              </div>
-
-              <div class="service-content-box">
-                <h4 class="h4 service-item-title">DevOps</h4>
-
-                <p class="service-item-text">
-                  Expert in architecting full-stack DevOps solutions from ideation to deployment for organizations ranging from startups to enterprises.
-                </p>
-              </div>
-
-            </li>
-
-            <li class="service-item">
-
-              <div class="service-icon-box">
-                <img src="./assets/images/sre_logo.svg" alt="SRE Icon" width="40">
-              </div>
-
-              <div class="service-content-box">
-                <h4 class="h4 service-item-title">Site Reliablity Engineering</h4>
-
-                <p class="service-item-text">
-                  Specialized SRE architecting highly available, scalable and efficient infrastructures via automation, monitoring and cultural transformation.</p>
-              </div>
-
-            </li>
-
-            <li class="service-item">
-
-              <div class="service-icon-box">
-                <img src="./assets/images/ml_ops.svg" alt="ML Ops" style="background-color:rgb(238, 238, 235);" width="40">
-              </div>
-
-              <div class="service-content-box">
-                <h4 class="h4 service-item-title">ML Ops</h4>
-
-                <p class="service-item-text">
-                  Proficient in streamlining machine learning lifecycle - automated ML pipeline, model deployment, governance and monitoring - ensuring sustained model quality and availability.
-                </p>
-              </div>
-
-            </li>
-
-          </ul>
-
+        <section class="stats-grid" aria-label="Highlights">
+          <div class="stat-card">
+            <strong>12+</strong>
+            <span>Years across cloud, automation, and delivery platforms</span>
+          </div>
+          <div class="stat-card">
+            <strong>3</strong>
+            <span>Major clouds: AWS, Azure, and Google Cloud</span>
+          </div>
+          <div class="stat-card">
+            <strong>10K+</strong>
+            <span>Users supported on enterprise DevOps platforms</span>
+          </div>
         </section>
 
-
-        <!--
-          - testimonials
-        -->
-
-        <section class="testimonials">
-
-          <h3 class="h3 testimonials-title">Github Projects</h3>
-
-          <ul class="testimonials-list has-scrollbar">
-
-            <li class="testimonials-item">
-              <div class="content-card" data-testimonials-item>
-
-                <figure class="testimonials-avatar-box">
-                  <img src="./assets/images/ansible.svg" alt="Create Kubeadm cluster using Ansible" width="60" data-testimonials-avatar>
-                </figure>
-
-                <h4 class="h4 testimonials-item-title" data-testimonials-title>Kubeadm Cluster</h4>
-
-                <div class="testimonials-text" data-testimonials-text>
-                  <p>
-                    Deploy a Kubernetes Kubeadm cluster with ansible on AWS cloud
-                  </p>
-                  <a class="white-link" href="https://github.com/ramchandra-guthula/Install_kubernetes_with_kubeadm">Create Kubeadm cluster using Ansible</a>
-                </div>
-
-              </div>
-            </li>
-
-            <li class="testimonials-item">
-              <div class="content-card" data-testimonials-item>
-
-                <figure class="testimonials-avatar-box">
-                  <img src="./assets/images/tf.svg" alt="Terrafom tutorials" width="60" data-testimonials-avatar>
-                </figure>
-
-                <h4 class="h4 testimonials-item-title" data-testimonials-title>Terrafom tutorials</h4>
-
-                <div class="testimonials-text" data-testimonials-text>
-                  <p>
-                   Terraform learing guide for beginners explaing about each component in practical
-                  </p>
-                  <a class="white-link" href="https://github.com/ramchandra-guthula/terraform">Terraform beginners guide</a>
-                </div>
-
-              </div>
-            </li>
-
-            <li class="testimonials-item">
-              <div class="content-card" data-testimonials-item>
-
-                <figure class="testimonials-avatar-box">
-                  <img src="./assets/images/aws.svg" alt="Sample app deployment with terraform" width="60" data-testimonials-avatar>
-                </figure>
-
-                <h4 class="h4 testimonials-item-title" data-testimonials-title>Sample app deployment with terraform</h4>
-
-                <div class="testimonials-text" data-testimonials-text>
-                  <p>
-                    Deploy a sample python application on AWS using terraform, terraform spinsup the required resources in cloud AWS
-                  </p>
-                </div>
-
-              </div>
-            </li>
-
-            <li class="testimonials-item">
-              <div class="content-card" data-testimonials-item>
-
-                <figure class="testimonials-avatar-box">
-                  <img src="./assets/images/kube.svg" alt="Deploy sample app with HELM charts" width="60" data-testimonials-avatar>
-                </figure>
-
-                <h4 class="h4 testimonials-item-title" data-testimonials-title>Deploy sample app with HELM charts</h4>
-
-                <div class="testimonials-text" data-testimonials-text>
-                  <p>
-                   Deploy a containerized java application on Kubernetes using custom HELM charts
-                  </p>
-                </div>
-
-              </div>
-            </li>
-
-          </ul>
-
+        <section class="section-block">
+          <div class="section-heading">
+            <p class="section-kicker">Content pillars</p>
+            <h3>What visitors should expect here</h3>
+          </div>
+          <div class="card-grid three-up">
+            <article class="feature-card">
+              <img src="./assets/images/cloud.svg" alt="Cloud architecture icon" width="42" height="42">
+              <h4>Cloud architecture</h4>
+              <p>Clear guidance on designing resilient systems across AWS, Azure, and GCP.</p>
+            </article>
+            <article class="feature-card">
+              <img src="./assets/images/devops-2.svg" alt="DevOps icon" width="42" height="42">
+              <h4>DevOps workflows</h4>
+              <p>Practical CI/CD, IaC, and automation patterns that teams can adopt quickly.</p>
+            </article>
+            <article class="feature-card">
+              <img src="./assets/images/sre_logo.svg" alt="SRE icon" width="42" height="42">
+              <h4>Reliability and scale</h4>
+              <p>Observability, incident readiness, Kubernetes operations, and platform reliability lessons.</p>
+            </article>
+          </div>
         </section>
 
-
-        <!--
-          - clients
-        -->
-        <section class="clients">
-<!-- 
-          <h3 class="h3 clients-title">Clients</h3>
-
-          <ul class="clients-list has-scrollbar">
-
-            <li class="clients-item">
-              <a href="#">
-                <img src="./assets/images/logo-1-color.png" alt="client logo">
-              </a>
-            </li>
-
-            <li class="clients-item">
-              <a href="#">
-                <img src="./assets/images/logo-2-color.png" alt="client logo">
-              </a>
-            </li>
-
-            <li class="clients-item">
-              <a href="#">
-                <img src="./assets/images/logo-3-color.png" alt="client logo">
-              </a>
-            </li>
-
-            <li class="clients-item">
-              <a href="#">
-                <img src="./assets/images/logo-4-color.png" alt="client logo">
-              </a>
-            </li>
-
-            <li class="clients-item">
-              <a href="#">
-                <img src="./assets/images/logo-5-color.png" alt="client logo">
-              </a>
-            </li>
-
-            <li class="clients-item">
-              <a href="#">
-                <img src="./assets/images/logo-6-color.png" alt="client logo">
-              </a>
-            </li>
-
-          </ul> -->
-
+        <section class="section-block">
+          <div class="section-heading">
+            <p class="section-kicker">Latest articles</p>
+            <h3>Fresh entry points for readers and search engines</h3>
+            <p>These long-form pages give the site real depth, stronger internal linking, and better odds of earning repeat visits over time.</p>
+          </div>
+          <div class="card-grid three-up" data-article-grid="teasers"></div>
         </section>
-
       </article>
 
-
-
-
-
-      <!--
-        - #RESUME
-      -->
-
-      <article class="resume" data-page="resume">
-
-        <header>
-          <h2 class="h2 article-title">Resume</h2>
-        </header>
-
-        <section class="timeline">
-
-          <div class="title-wrapper">
-            <div class="icon-box">
-              <ion-icon name="book-outline"></ion-icon>
-            </div>
-
-            <h3 class="h3">Education</h3>
+      <article class="panel" data-page="content" id="content">
+        <section class="section-block">
+          <div class="section-heading">
+            <p class="section-kicker">Featured content</p>
+            <h2>Start with practical resources people can actually use.</h2>
+            <p>The site now has standalone article pages plus repo-backed resources, which is a much better base for search, shares, and deeper session time.</p>
           </div>
 
-          <ol class="timeline-list">
+          <div class="card-grid two-up" data-article-grid="content"></div>
 
-            <li class="timeline-item">
+          <div class="card-grid two-up top-gap">
+            <article class="project-card">
+              <span class="badge">Guide</span>
+              <h3>Terraform learning path for beginners</h3>
+              <p>A hands-on repo that explains Terraform building blocks in a way new practitioners can follow quickly.</p>
+              <a href="https://github.com/ramchandra-guthula/terraform" target="_blank" rel="noreferrer">Open resource</a>
+            </article>
 
-              <h4 class="h4 timeline-item-title">JNT University, Kakinada</h4>
+            <article class="project-card">
+              <span class="badge">Tutorial</span>
+              <h3>Kubernetes cluster setup with Ansible</h3>
+              <p>A practical kubeadm-based deployment walkthrough for engineers building clusters with repeatability in mind.</p>
+              <a href="https://github.com/ramchandra-guthula/Install_kubernetes_with_kubeadm" target="_blank" rel="noreferrer">Open resource</a>
+            </article>
 
-              <span>2007 — 2011</span>
+            <article class="project-card">
+              <span class="badge">Series</span>
+              <h3>Cloud-native delivery patterns</h3>
+              <p>Future article direction around GitHub Actions, EKS, Helm, Terraform, and secure delivery workflows.</p>
+              <a href="mailto:ramchandra.cloud@gmail.com?subject=Cloud-native%20content%20ideas">Suggest a topic</a>
+            </article>
 
-              <p class="timeline-text">
-                B.Tech in Electronics and communications Engineering
-              </p>
-
-            </li>
-
-            <!-- <li class="timeline-item">
-
-              <h4 class="h4 timeline-item-title">Nalanda Junior Collage</h4>
-
-              <span>2006 — 2007</span>
-
-              <p class="timeline-text">
-                Ratione voluptatem sequi nesciunt, facere quisquams facere menda ossimus, omnis voluptas assumenda est
-                omnis..
-              </p>
-
-            </li>
-
-            <li class="timeline-item">
-
-              <h4 class="h4 timeline-item-title">High school of art and design</h4>
-
-              <span>2002 — 2004</span>
-
-              <p class="timeline-text">
-                Duis aute irure dolor in reprehenderit in voluptate, quila voluptas mag odit aut fugit, sed consequuntur
-                magni dolores
-                eos.
-              </p>
-
-            </li> -->
-
-          </ol>
-
-        </section>
-        <section class="timeline">
-          <div class="title-wrapper">
-            <div class="icon-box">
-              <ion-icon name="book-outline"></ion-icon>
-            </div>  
-            <h3 class="h3">Certifications</h3>
+            <article class="project-card newsletter-card">
+              <p class="section-kicker">Stay in the loop</p>
+              <h3>Follow updates without waiting for social algorithms.</h3>
+              <p>Subscribe by RSS today, and later this can evolve into an email newsletter when you are ready.</p>
+              <div class="action-row">
+                <a class="button button-primary" href="./feed.xml">Open RSS feed</a>
+                <a class="button button-secondary" href="mailto:ramchandra.cloud@gmail.com?subject=Subscribe%20me%20to%20future%20updates">Request email updates</a>
+              </div>
+            </article>
           </div>
-          <ol class="timeline-list">
-
-            <li class="timeline-item">
-              <h4 class="h4 timeline-item-title" href="">AWS: Certified solutions architect - Associate(2017)</h4>
-            </li>
-            <li class="timeline-item">
-              <h4 class="h4 timeline-item-title"><a style="color:rgb(253, 251, 251);" href="https://www.credly.com/badges/c6988572-b130-44b1-b298-91577623a1eb?source=linked_in_profile" target="_blank"><u> Kubernetes: Certified Kubernetes Administrator(2022)</u></a></h4>
-            </li>
-            <li class="timeline-item">
-              <h4 class="h4 timeline-item-title" href="https://www.credly.com/badges/33518135-3bf1-49c2-9877-df015af6f3b3/linked_in_profile" target="_blank"><u>Terraform: HashiCorp Certified: Terraform Associate - 002 (2022)</u></h4>
-            </li>            
-        </ol>
         </section>
-        <section class="timeline">
 
-          <div class="title-wrapper">
-            <div class="icon-box">
-              <ion-icon name="book-outline"></ion-icon>
-            </div>  
+        <section class="section-block">
+          <div class="section-heading">
+            <p class="section-kicker">Search intent</p>
+            <h3>Topics that can grow organic traffic over time</h3>
+          </div>
+          <div class="topic-grid">
+            <span>Terraform tutorials for beginners</span>
+            <span>Kubernetes on AWS</span>
+            <span>Platform engineering best practices</span>
+            <span>DevOps architecture patterns</span>
+            <span>SRE playbooks</span>
+            <span>Cloud migration strategy</span>
+            <span>GitHub Actions for enterprises</span>
+            <span>EKS deployment workflows</span>
+          </div>
+        </section>
+      </article>
 
-            <h3 class="h3">Experience</h3>
+      <article class="panel" data-page="resources" id="resources">
+        <section class="section-block">
+          <div class="section-heading">
+            <p class="section-kicker">Resources</p>
+            <h2>Technical depth, shaped for readers, teams, and hiring managers.</h2>
           </div>
 
-          <ol class="timeline-list">
-
-            <li class="timeline-item">
-
-              <h4 class="h4 timeline-item-title">NomiHealth</h4>
-              <h2 class="h4 timeline-item-title">Cloud Architect</h2>
-
-              <span>2022 — Present</span>
-
-              <p class="timeline-text">
-                Working as cloud Architect, taking care of desigining for serverless and container based applications in cloud AWS 
-              </p>
-
-            </li>
-
-            <li class="timeline-item">
-
-              <h4 class="h4 timeline-item-title">Platform Architect</h4>
-              <h2 class="h4 timeline-item-title">DevOps Architect</h2>
-
-              <span>2019 — 2022</span>
-
-              <p class="timeline-text">
-                Designed and implemented enterprise DevOps tools platform for more then 10K+ users
-              </p>
-
-            </li>
-
-            <li class="timeline-item">
-
-              <h4 class="h4 timeline-item-title">Mercedes-Benz Research and Development India</h4>
-              <h2 class="h4 timeline-item-title">Senior DevOps consultant</h2>
-
-            <span>2018 — 2019</span>
-
-              <p class="timeline-text">
-                Containerized Damiler supplier portal in cloud AWS using EKS and HELM charts
-              </p>
-
-            </li>
-            <li class="timeline-item">
-
-              <h4 class="h4 timeline-item-title">Quest Global(Formarly Exilant technologies)</h4>
-              <h2 class="h4 timeline-item-title">DevOps Engineer</h2>
-
-            <span>2016 — 2018</span>
-
-              <p class="timeline-text">
-                Automated the entire CICD using ansible on premise datacenters and cloud AWS
-              </p>
-
-            </li>
-
-            <li class="timeline-item">
-
-              <h4 class="h4 timeline-item-title">Intelligentia IT systems pvt ltd</h4>
-              <h2 class="h4 timeline-item-title">Automation specilist</h2>
-
-            <span>2012 — 2016</span>
-
-              <p class="timeline-text">
-                Automated deployments using Jenkins and configuration management tool Chef
-              </p>
-
-            </li>
-          </ol>
-
+          <div class="resource-list">
+            <article class="resource-item">
+              <h3>Core skills</h3>
+              <p>AWS, Azure, GCP, Kubernetes, Terraform, GitHub Actions, Jenkins, ArgoCD, observability, and delivery automation.</p>
+            </article>
+            <article class="resource-item">
+              <h3>Experience highlights</h3>
+              <p>Enterprise DevOps platforms, serverless and container architecture, reliability engineering, and developer enablement.</p>
+            </article>
+            <article class="resource-item">
+              <h3>Certifications</h3>
+              <p>AWS Solutions Architect Associate, Certified Kubernetes Administrator, and HashiCorp Terraform Associate.</p>
+            </article>
+            <article class="resource-item">
+              <h3>Editorial direction</h3>
+              <p>Focus future posts on specific questions engineers search for, then connect each article to a real repo, example, or implementation checklist.</p>
+            </article>
+            <article class="resource-item analytics-card">
+              <h3>Analytics ready</h3>
+              <p>The site now supports optional Plausible, GoatCounter, or Google Analytics 4 loading through a single config file when you are ready to connect a real tracking account.</p>
+              <p><a href="./feed.xml">RSS feed</a> is also live so readers can follow updates directly.</p>
+            </article>
+          </div>
         </section>
-
-        <section class="skill">
-
-          <h3 class="h3 skills-title">My skills</h3>
-
-          <!-- <ul class="skills-list content-card">
-
-            <li class="skills-item">
-
-              <div class="title-wrapper">
-                <h5 class="h5">AWS</h5>
-                <data value="80">90%</data>
-              </div>
-
-              <div class="skill-progress-bg">
-                <div class="skill-progress-fill" style="width: 100%;"></div>
-              </div>
-
-            </li>
-
-            <li class="skills-item">
-
-              <div class="title-wrapper">
-                <h5 class="h5">GCP</h5>
-                <data value="70">70%</data>
-              </div>
-
-              <div class="skill-progress-bg">
-                <div class="skill-progress-fill" style="width: 70%;"></div>
-              </div>
-
-            </li>
-
-            <li class="skills-item">
-
-              <div class="title-wrapper">
-                <h5 class="h5">Azure</h5>
-                <data value="90">50%</data>
-              </div>
-
-              <div class="skill-progress-bg">
-                <div class="skill-progress-fill" style="width: 90%;"></div>
-              </div>
-
-            </li>
-
-            <li class="skills-item">
-
-              <div class="title-wrapper">
-                <h5 class="h5">Jenkins</h5>
-                <data value="50">80%</data>
-              </div>
-
-              <div class="skill-progress-bg">
-                <div class="skill-progress-fill" style="width: 80%;"></div>
-              </div>
-
-            </li>
-            <li class="skills-item">
-
-              <div class="title-wrapper">
-                <h5 class="h5">Jenkins</h5>
-                <data value="50">80%</data>
-              </div>
-
-              <div class="skill-progress-bg">
-                <div class="skill-progress-fill" style="width: 80%;"></div>
-              </div>
-
-            </li>
-            
-
-          </ul> -->
-
-
-          <table>
-            <tr>
-              <th> <b> Technology </b></th>
-              <th> <b> Skill </b></th>
-              <!-- <th>Country</th> -->
-            </tr>
-            <tr>
-              <td>Cloud</td>
-              <td>AWS, Azure and GCP </td>
-            </tr>
-            <tr>
-              <td>Version control </td>
-              <td>Github, Gitlab </td>
-            </tr>
-            <tr>
-              <td>Continuous Integration</td>
-              <td>Jenkins, Cloudbees, GitHub Actions, AWS CodePipeline, GitLab </td>
-            </tr>
-            <tr>
-              <td>Continuous Delivery</td>
-              <td>AWS CodeDeploy, Ansible, Chef, Terraform, CloudFormation </td>
-            </tr>
-            <tr>
-              <td>Scripting</td>
-              <td>Python, Bash/shell, Groovy</td>
-            </tr>
-            <tr>
-              <td>Monitoring</td>
-              <td>Grafana, Prometheus, Elasticsearch, Kibana, logstash, Nagios, Icinga2, Datadog </td>
-            </tr>
-            <tr>
-              <td>Code Quality</td>
-              <td>SonarQube, Checkmarx, Cycode, snyk </td>
-            </tr>
-            <tr>
-              <td>Containerization</td>
-              <td>Kubernetes, Docker, HELM, Packer, Containerd, ArgoCD</td>
-            </tr>
-            <tr>
-              <td>Service Mesh</td>
-              <td>Linkerd, Istio </td>
-            </tr>
-          </table>
-
-        </section>
-
       </article>
 
-
-
-
-
-      <!--
-        - #PORTFOLIO
-      -->
-
-<!--       <article class="portfolio" data-page="portfolio">
-
-        <header>
-          <h2 class="h2 article-title">Portfolio</h2>
-        </header>
-
-        <section class="projects">
-
-          <ul class="filter-list">
-
-            <li class="filter-item">
-              <button class="active" data-filter-btn>All</button>
-            </li>
-
-            <li class="filter-item">
-              <button data-filter-btn>Web design</button>
-            </li>
-
-            <li class="filter-item">
-              <button data-filter-btn>Applications</button>
-            </li>
-
-            <li class="filter-item">
-              <button data-filter-btn>Web development</button>
-            </li>
-
-          </ul>
-
-          <div class="filter-select-box">
-
-            <button class="filter-select" data-select>
-
-              <div class="select-value" data-selecct-value>Select category</div>
-
-              <div class="select-icon">
-                <ion-icon name="chevron-down"></ion-icon>
-              </div>
-
-            </button>
-
-            <ul class="select-list">
-
-              <li class="select-item">
-                <button data-select-item>All</button>
-              </li>
-
-              <li class="select-item">
-                <button data-select-item>Web design</button>
-              </li>
-
-              <li class="select-item">
-                <button data-select-item>Applications</button>
-              </li>
-
-              <li class="select-item">
-                <button data-select-item>Web development</button>
-              </li>
-
-            </ul>
-
+      <article class="panel" data-page="contact" id="contact">
+        <section class="section-block contact-panel">
+          <div class="section-heading">
+            <p class="section-kicker">Contact</p>
+            <h2>Let&apos;s collaborate on content, consulting, or platform strategy.</h2>
+            <p>If you want to discuss cloud architecture, DevOps transformations, creator collaborations, or speaking opportunities, reach out directly.</p>
           </div>
 
-          <ul class="project-list">
-
-            <li class="project-item  active" data-filter-item data-category="web development">
-              <a href="#">
-
-                <figure class="project-img">
-                  <div class="project-item-icon-box">
-                    <ion-icon name="eye-outline"></ion-icon>
-                  </div>
-
-                  <img src="./assets/images/project-1.jpg" alt="finance" loading="lazy">
-                </figure>
-
-                <h3 class="project-title">Finance</h3>
-
-                <p class="project-category">Web development</p>
-
-              </a>
-            </li>
-
-            <li class="project-item  active" data-filter-item data-category="web development">
-              <a href="#">
-
-                <figure class="project-img">
-                  <div class="project-item-icon-box">
-                    <ion-icon name="eye-outline"></ion-icon>
-                  </div>
-
-                  <img src="./assets/images/project-2.png" alt="orizon" loading="lazy">
-                </figure>
-
-                <h3 class="project-title">Orizon</h3>
-
-                <p class="project-category">Web development</p>
-
-              </a>
-            </li>
-
-            <li class="project-item  active" data-filter-item data-category="web design">
-              <a href="#">
-
-                <figure class="project-img">
-                  <div class="project-item-icon-box">
-                    <ion-icon name="eye-outline"></ion-icon>
-                  </div>
-
-                  <img src="./assets/images/project-3.jpg" alt="fundo" loading="lazy">
-                </figure>
-
-                <h3 class="project-title">Fundo</h3>
-
-                <p class="project-category">Web design</p>
-
-              </a>
-            </li>
-
-            <li class="project-item  active" data-filter-item data-category="applications">
-              <a href="#">
-
-                <figure class="project-img">
-                  <div class="project-item-icon-box">
-                    <ion-icon name="eye-outline"></ion-icon>
-                  </div>
-
-                  <img src="./assets/images/project-4.png" alt="brawlhalla" loading="lazy">
-                </figure>
-
-                <h3 class="project-title">Brawlhalla</h3>
-
-                <p class="project-category">Applications</p>
-
-              </a>
-            </li>
-
-            <li class="project-item  active" data-filter-item data-category="web design">
-              <a href="#">
-
-                <figure class="project-img">
-                  <div class="project-item-icon-box">
-                    <ion-icon name="eye-outline"></ion-icon>
-                  </div>
-
-                  <img src="./assets/images/project-5.png" alt="dsm." loading="lazy">
-                </figure>
-
-                <h3 class="project-title">DSM.</h3>
-
-                <p class="project-category">Web design</p>
-
-              </a>
-            </li>
-
-            <li class="project-item  active" data-filter-item data-category="web design">
-              <a href="#">
-
-                <figure class="project-img">
-                  <div class="project-item-icon-box">
-                    <ion-icon name="eye-outline"></ion-icon>
-                  </div>
-
-                  <img src="./assets/images/project-6.png" alt="metaspark" loading="lazy">
-                </figure>
-
-                <h3 class="project-title">MetaSpark</h3>
-
-                <p class="project-category">Web design</p>
-
-              </a>
-            </li>
-
-            <li class="project-item  active" data-filter-item data-category="web development">
-              <a href="#">
-
-                <figure class="project-img">
-                  <div class="project-item-icon-box">
-                    <ion-icon name="eye-outline"></ion-icon>
-                  </div>
-
-                  <img src="./assets/images/project-7.png" alt="summary" loading="lazy">
-                </figure>
-
-                <h3 class="project-title">Summary</h3>
-
-                <p class="project-category">Web development</p>
-
-              </a>
-            </li>
-
-            <li class="project-item  active" data-filter-item data-category="applications">
-              <a href="#">
-
-                <figure class="project-img">
-                  <div class="project-item-icon-box">
-                    <ion-icon name="eye-outline"></ion-icon>
-                  </div>
-
-                  <img src="./assets/images/project-8.jpg" alt="task manager" loading="lazy">
-                </figure>
-
-                <h3 class="project-title">Task Manager</h3>
-
-                <p class="project-category">Applications</p>
-
-              </a>
-            </li>
-
-            <li class="project-item  active" data-filter-item data-category="web development">
-              <a href="#">
-
-                <figure class="project-img">
-                  <div class="project-item-icon-box">
-                    <ion-icon name="eye-outline"></ion-icon>
-                  </div>
-
-                  <img src="./assets/images/project-9.png" alt="arrival" loading="lazy">
-                </figure>
-
-                <h3 class="project-title">Arrival</h3>
-
-                <p class="project-category">Web development</p>
-
-              </a>
-            </li>
-
-          </ul>
-
-        </section>
-
-      </article>
-
- -->
-
-
-
-      <!--
-        - #BLOG
-      -->
-
-      <article class="blog" data-page="blog">
-
-        <header>
-          <h2 class="h2 article-title">Blog</h2>
-        </header>
-
-        <section class="blog-posts">
-
-          <ul class="blog-posts-list">
-
-            <li class="blog-post-item">
-              <a href="https://ramchandra-guthula.github.io/terraform/" target="_blank>
-
-                <figure class="blog-banner-box">
-                  <img src="./assets/images/tf.svg" alt="Learn terraform step by step" loading="lazy" >
-                  
-                </figure>
-
-                <div class="blog-content">
-
-                  <div class="blog-meta">
-                    <p class="blog-category">Design</p>
-
-                    <span class="dot"></span>
-
-                    <time datetime="2022-02-23">Fab 23, 2022</time>
-                  </div>
-
-                  <h3 class="h3 blog-item-title">Learn terraform step by step</h3>
-
-                  <p class="blog-text">
-                    this post helps you to learn terraform from scratch!
-                  </p>
-
-                </div>
-
-              </a>
-            </li>
-
-            <li class="blog-post-item">
-              <a href="https://ramchandra-guthula.github.io/deploy_sample_app_with_terraform_to_aws/">
-
-                <figure class="blog-banner-box">
-                  <img src="./assets/images/tf.svg" alt="Best fonts every designer" loading="lazy">
-                </figure>
-
-                <div class="blog-content">
-
-                  <div class="blog-meta">
-                    <p class="blog-category">Design</p>
-
-                    <span class="dot"></span>
-
-                    <time datetime="2022-02-23">Fab 23, 2022</time>
-                  </div>
-
-                  <h3 class="h3 blog-item-title">Deploy a python app to AWS using Terraform</h3>
-
-                  <p class="blog-text">
-                    Deploy a sample python app to AWS using terraform, where we use terraform cloud instead of terraform CLI
-                  </p>
-
-                </div>
-
-              </a>
-            </li>
-
-            <!-- <li class="blog-post-item">
-              <a href="#">
-
-                <figure class="blog-banner-box">
-                  <img src="./assets/images/blog-3.jpg" alt="Design digest #80" loading="lazy">
-                </figure>
-
-                <div class="blog-content">
-
-                  <div class="blog-meta">
-                    <p class="blog-category">Design</p>
-
-                    <span class="dot"></span>
-
-                    <time datetime="2022-02-23">Fab 23, 2022</time>
-                  </div>
-
-                  <h3 class="h3 blog-item-title">Design digest #80</h3>
-
-                  <p class="blog-text">
-                    Excepteur sint occaecat cupidatat no proident, quis nostrum exercitationem ullam corporis suscipit.
-                  </p>
-
-                </div>
-
-              </a>
-            </li>
-
-            <li class="blog-post-item">
-              <a href="#">
-
-                <figure class="blog-banner-box">
-                  <img src="./assets/images/blog-4.jpg" alt="UI interactions of the week" loading="lazy">
-                </figure>
-
-                <div class="blog-content">
-
-                  <div class="blog-meta">
-                    <p class="blog-category">Design</p>
-
-                    <span class="dot"></span>
-
-                    <time datetime="2022-02-23">Fab 23, 2022</time>
-                  </div>
-
-                  <h3 class="h3 blog-item-title">UI interactions of the week</h3>
-
-                  <p class="blog-text">
-                    Enim ad minim veniam, consectetur adipiscing elit, quis nostrud exercitation ullamco laboris nisi.
-                  </p>
-
-                </div>
-
-              </a>
-            </li>
-
-            <li class="blog-post-item">
-              <a href="#">
-
-                <figure class="blog-banner-box">
-                  <img src="./assets/images/blog-5.jpg" alt="The forgotten art of spacing" loading="lazy">
-                </figure>
-
-                <div class="blog-content">
-
-                  <div class="blog-meta">
-                    <p class="blog-category">Design</p>
-
-                    <span class="dot"></span>
-
-                    <time datetime="2022-02-23">Fab 23, 2022</time>
-                  </div>
-
-                  <h3 class="h3 blog-item-title">The forgotten art of spacing</h3>
-
-                  <p class="blog-text">
-                    Maxime placeat, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                  </p>
-
-                </div>
-
-              </a>
-            </li>
-
-            <li class="blog-post-item">
-              <a href="#">
-
-                <figure class="blog-banner-box">
-                  <img src="./assets/images/blog-6.jpg" alt="Design digest #79" loading="lazy">
-                </figure>
-
-                <div class="blog-content">
-
-                  <div class="blog-meta">
-                    <p class="blog-category">Design</p>
-
-                    <span class="dot"></span>
-
-                    <time datetime="2022-02-23">Fab 23, 2022</time>
-                  </div>
-
-                  <h3 class="h3 blog-item-title">Design digest #79</h3>
-
-                  <p class="blog-text">
-                    Optio cumque nihil impedit uo minus quod maxime placeat, velit esse cillum.
-                  </p>
-
-                </div>
-
-              </a>
-            </li> -->
-
-          </ul>
-
-        </section>
-
-      </article>
-
-
-
-
-
-      <!--
-        - #CONTACT
-      -->
-
-      <article class="contact" data-page="contact">
-
-        <header>
-          <h2 class="h2 article-title">Contact</h2>
-        </header>
-
-        <section class="mapbox" data-mapbox>
-          <figure>
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d199666.5651251294!2d-121.58334177520186!3d38.56165006739519!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x809ac672b28397f9%3A0x921f6aaa74197fdb!2sSacramento%2C%20CA%2C%20USA!5e0!3m2!1sen!2sbd!4v1647608789441!5m2!1sen!2sbd"
-              width="400" height="300" loading="lazy"></iframe>
-          </figure>
-        </section>
-
-        <section class="contact-form">
-
-          <h3 class="h3 form-title">Contact Form</h3>
-
-          <form action="#" class="form" data-form>
-
-            <div class="input-wrapper">
-              <input type="text" name="fullname" class="form-input" placeholder="Full name" required data-form-input>
-
-              <input type="email" name="email" class="form-input" placeholder="Email address" required data-form-input>
-            </div>
-
-            <textarea name="message" class="form-input" placeholder="Your Message" required data-form-input></textarea>
-
-            <button class="form-btn" type="submit" disabled data-form-btn>
-              <ion-icon name="paper-plane"></ion-icon>
-              <span>Send Message</span>
-            </button>
-
-          </form>
-
-        </section>
-
-      </article>
-
-
-      <!--
-          - testimonials modal
-        -->
-
-        <div class="modal-container" data-modal-container>
-
-          <div class="overlay" data-overlay></div>
-
-          <section class="testimonials-modal">
-
-            <button class="modal-close-btn" data-modal-close-btn>
-              <ion-icon name="close-outline"></ion-icon>
-            </button>
-
-            <div class="modal-img-wrapper">
-              <figure class="modal-avatar-box">
-                <img src="./assets/images/avatar-1.png" alt="Daniel lewis" width="80" data-modal-img>
-              </figure>
-
-              <img src="./assets/images/icon-quote.svg" alt="quote icon">
-            </div>
-
-            <div class="modal-content">
-
-              <h4 class="h3 modal-title" data-modal-title>Daniel lewis</h4>
-
-              <time datetime="2021-06-14">14 June, 2021</time>
-
-              <div data-modal-text>
-                <p>
-                  Richard was hired to create a corporate identity. We were very pleased with the work done. She has a
-                  lot of experience
-                  and is very concerned about the needs of client. Lorem ipsum dolor sit amet, ullamcous cididt
-                  consectetur adipiscing
-                  elit, seds do et eiusmod tempor incididunt ut laborels dolore magnarels alia.
-                </p>
+          <div class="card-grid two-up">
+            <article class="contact-card">
+              <h3>Email</h3>
+              <p>Best for consulting inquiries, partnerships, and technical discussions.</p>
+              <a class="button button-primary" href="mailto:ramchandra.cloud@gmail.com">ramchandra.cloud@gmail.com</a>
+            </article>
+            <article class="contact-card">
+              <h3>Professional networks</h3>
+              <p>Follow ongoing updates and connect for creator or hiring conversations.</p>
+              <div class="stacked-links">
+                <a href="https://www.linkedin.com/in/ramchandra-guthula/" target="_blank" rel="noreferrer">LinkedIn</a>
+                <a href="https://github.com/ramchandra-guthula" target="_blank" rel="noreferrer">GitHub</a>
+                <a href="https://twitter.com/me_ramguthula" target="_blank" rel="noreferrer">X / Twitter</a>
               </div>
-
-            </div>
-
-          </section>
-
-        </div>
-
+            </article>
+          </div>
+        </section>
+      </article>
     </div>
-
-
   </main>
 
-
-
-
-
-
-  <!--
-    - custom js link
-  -->
+  <script src="./assets/js/site-data.js"></script>
   <script src="./assets/js/script.js"></script>
-
-  <!--
-    - ionicon link
-  -->
-  <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
-  <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
-
 </body>
-
 </html>

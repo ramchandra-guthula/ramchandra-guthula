@@ -1,159 +1,145 @@
 'use strict';
 
+const siteData = window.siteData || { analytics: {}, articles: [] };
+const navLinks = Array.from(document.querySelectorAll('[data-nav-link]'));
+const panels = Array.from(document.querySelectorAll('[data-page]'));
 
-
-// element toggle function
-const elementToggleFunc = function (elem) { elem.classList.toggle("active"); }
-
-
-
-// sidebar variables
-const sidebar = document.querySelector("[data-sidebar]");
-const sidebarBtn = document.querySelector("[data-sidebar-btn]");
-
-// sidebar toggle functionality for mobile
-sidebarBtn.addEventListener("click", function () { elementToggleFunc(sidebar); });
-
-
-
-// testimonials variables
-const testimonialsItem = document.querySelectorAll("[data-testimonials-item]");
-const modalContainer = document.querySelector("[data-modal-container]");
-const modalCloseBtn = document.querySelector("[data-modal-close-btn]");
-const overlay = document.querySelector("[data-overlay]");
-
-// modal variable
-const modalImg = document.querySelector("[data-modal-img]");
-const modalTitle = document.querySelector("[data-modal-title]");
-const modalText = document.querySelector("[data-modal-text]");
-
-// modal toggle function
-const testimonialsModalFunc = function () {
-  modalContainer.classList.toggle("active");
-  overlay.classList.toggle("active");
-}
-
-// add click event to all modal items
-for (let i = 0; i < testimonialsItem.length; i++) {
-
-  testimonialsItem[i].addEventListener("click", function () {
-
-    modalImg.src = this.querySelector("[data-testimonials-avatar]").src;
-    modalImg.alt = this.querySelector("[data-testimonials-avatar]").alt;
-    modalTitle.innerHTML = this.querySelector("[data-testimonials-title]").innerHTML;
-    modalText.innerHTML = this.querySelector("[data-testimonials-text]").innerHTML;
-
-    testimonialsModalFunc();
-
-  });
-
-}
-
-// add click event to modal close button
-modalCloseBtn.addEventListener("click", testimonialsModalFunc);
-overlay.addEventListener("click", testimonialsModalFunc);
-
-
-
-// custom select variables
-/* const select = document.querySelector("[data-select]"); */
-const selectItems = document.querySelectorAll("[data-select-item]");
-const selectValue = document.querySelector("[data-selecct-value]");
-const filterBtn = document.querySelectorAll("[data-filter-btn]");
-
-/* select.addEventListener("click", function () { elementToggleFunc(this); }); */
-
-// add event in all select items
-for (let i = 0; i < selectItems.length; i++) {
-  selectItems[i].addEventListener("click", function () {
-
-    let selectedValue = this.innerText.toLowerCase();
-    selectValue.innerText = this.innerText;
-    elementToggleFunc(select);
-    filterFunc(selectedValue);
-
+function formatLongDate(value) {
+  return new Date(`${value}T12:00:00Z`).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'UTC'
   });
 }
 
-// filter variables
-const filterItems = document.querySelectorAll("[data-filter-item]");
+function createArticleCard(article, variant) {
+  const item = document.createElement('article');
+  item.className = variant === 'teaser' ? 'article-teaser' : 'project-card';
 
-const filterFunc = function (selectedValue) {
+  const badge = document.createElement('span');
+  badge.className = 'badge';
+  badge.textContent = article.category;
 
-  for (let i = 0; i < filterItems.length; i++) {
+  const title = document.createElement(variant === 'teaser' ? 'h4' : 'h3');
+  title.textContent = article.title;
 
-    if (selectedValue === "all") {
-      filterItems[i].classList.add("active");
-    } else if (selectedValue === filterItems[i].dataset.category) {
-      filterItems[i].classList.add("active");
-    } else {
-      filterItems[i].classList.remove("active");
-    }
+  const description = document.createElement('p');
+  description.textContent = article.description;
 
+  const meta = document.createElement('p');
+  meta.className = 'content-meta';
+  meta.textContent = `${formatLongDate(article.date)} • ${article.readTime}`;
+
+  const link = document.createElement('a');
+  link.href = article.url;
+  link.textContent = variant === 'teaser' ? 'Read article' : 'Open article';
+
+  item.append(badge, title, description, meta, link);
+  return item;
+}
+
+function renderHomepageArticles() {
+  const teaserGrid = document.querySelector('[data-article-grid="teasers"]');
+  const contentGrid = document.querySelector('[data-article-grid="content"]');
+
+  if (teaserGrid) {
+    teaserGrid.replaceChildren(...siteData.articles.map((article) => createArticleCard(article, 'teaser')));
   }
 
+  if (contentGrid) {
+    contentGrid.replaceChildren(...siteData.articles.map((article) => createArticleCard(article, 'content')));
+  }
 }
 
-// add event in all filter button items for large screen
-let lastClickedBtn = filterBtn[0];
+function renderRelatedArticles() {
+  const relatedList = document.querySelector('[data-related-articles]');
+  const articleSlug = document.body.dataset.articleSlug;
 
-for (let i = 0; i < filterBtn.length; i++) {
+  if (!relatedList || !articleSlug) {
+    return;
+  }
 
-  filterBtn[i].addEventListener("click", function () {
-
-    let selectedValue = this.innerText.toLowerCase();
-    selectValue.innerText = this.innerText;
-    filterFunc(selectedValue);
-
-    lastClickedBtn.classList.remove("active");
-    this.classList.add("active");
-    lastClickedBtn = this;
-
+  const relatedArticles = siteData.articles.filter((article) => article.slug !== articleSlug).slice(0, 2);
+  const links = relatedArticles.map((article) => {
+    const link = document.createElement('a');
+    link.href = article.url.replace('./articles/', './');
+    link.textContent = article.title;
+    return link;
   });
 
+  const browseLink = document.createElement('a');
+  browseLink.href = '../index.html#content';
+  browseLink.textContent = 'Browse all homepage resources';
+
+  relatedList.replaceChildren(...links, browseLink);
 }
 
+function enableAnalytics() {
+  const { provider, plausibleDomain, goatcounterUrl, gaMeasurementId } = siteData.analytics || {};
 
+  if (provider === 'plausible' && plausibleDomain) {
+    const script = document.createElement('script');
+    script.defer = true;
+    script.dataset.domain = plausibleDomain;
+    script.src = 'https://plausible.io/js/script.js';
+    document.head.appendChild(script);
+  }
 
-// contact form variables
-const form = document.querySelector("[data-form]");
-const formInputs = document.querySelectorAll("[data-form-input]");
-const formBtn = document.querySelector("[data-form-btn]");
+  if (provider === 'goatcounter' && goatcounterUrl) {
+    const script = document.createElement('script');
+    script.async = true;
+    script.dataset.goatcounter = goatcounterUrl;
+    script.src = 'https://gc.zgo.at/count.js';
+    document.head.appendChild(script);
+  }
 
-// add event to all form input field
-for (let i = 0; i < formInputs.length; i++) {
-  formInputs[i].addEventListener("input", function () {
+  if (provider === 'ga4' && gaMeasurementId) {
+    const gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = `https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`;
+    document.head.appendChild(gtagScript);
 
-    // check form validation
-    if (form.checkValidity()) {
-      formBtn.removeAttribute("disabled");
-    } else {
-      formBtn.setAttribute("disabled", "");
-    }
+    const inlineScript = document.createElement('script');
+    inlineScript.textContent = [
+      'window.dataLayer = window.dataLayer || [];',
+      'function gtag(){dataLayer.push(arguments);}',
+      'gtag("js", new Date());',
+      `gtag("config", "${gaMeasurementId}");`
+    ].join('');
+    document.head.appendChild(inlineScript);
+  }
+}
 
+function showPage(pageName) {
+  const normalized = pageName || 'about';
+  const hasMatch = panels.some((panel) => panel.dataset.page === normalized);
+  const activePage = hasMatch ? normalized : 'about';
+
+  panels.forEach((panel) => {
+    panel.classList.toggle('active', panel.dataset.page === activePage);
+  });
+
+  navLinks.forEach((link) => {
+    link.classList.toggle('active', link.dataset.navLink === activePage);
   });
 }
 
-
-
-// page navigation variables
-const navigationLinks = document.querySelectorAll("[data-nav-link]");
-const pages = document.querySelectorAll("[data-page]");
-
-// add event to all nav link
-for (let i = 0; i < navigationLinks.length; i++) {
-  navigationLinks[i].addEventListener("click", function () {
-
-    for (let i = 0; i < pages.length; i++) {
-      if (this.innerHTML.toLowerCase() === pages[i].dataset.page) {
-        pages[i].classList.add("active");
-        navigationLinks[i].classList.add("active");
-        window.scrollTo(0, 0);
-      } else {
-        pages[i].classList.remove("active");
-        navigationLinks[i].classList.remove("active");
-      }
-    }
-
+navLinks.forEach((link) => {
+  link.addEventListener('click', () => {
+    const pageName = link.dataset.navLink;
+    showPage(pageName);
+    history.replaceState(null, '', `#${pageName}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
-}
+});
+
+window.addEventListener('hashchange', () => {
+  const pageName = window.location.hash.replace('#', '');
+  showPage(pageName);
+});
+
+renderHomepageArticles();
+renderRelatedArticles();
+enableAnalytics();
+showPage(window.location.hash.replace('#', '') || 'about');

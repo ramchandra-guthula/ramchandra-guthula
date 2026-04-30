@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terraform for Beginners: What to Learn First | Ram Guthula</title>
+  <meta name="description" content="A practical beginner roadmap for learning Terraform, from providers and state to modules, environments, and team workflows.">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#0b1220">
+  <link rel="canonical" href="https://www.ramguthula.com/articles/terraform-for-beginners.html">
+  <link rel="alternate" type="application/rss+xml" title="Ram Guthula Feed" href="https://www.ramguthula.com/feed.xml">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Terraform for Beginners: What to Learn First">
+  <meta property="og:description" content="A practical roadmap for learning Terraform without getting buried in theory.">
+  <meta property="og:url" content="https://www.ramguthula.com/articles/terraform-for-beginners.html">
+  <meta property="og:image" content="https://www.ramguthula.com/github-header-image.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Terraform for Beginners: What to Learn First">
+  <meta name="twitter:description" content="A practical roadmap for learning Terraform without getting buried in theory.">
+  <meta name="twitter:image" content="https://www.ramguthula.com/github-header-image.png">
+
+  <link rel="shortcut icon" href="../assets/images/logo.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/style.css">
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "Terraform for Beginners: What to Learn First",
+      "description": "A practical beginner roadmap for learning Terraform, from providers and state to modules, environments, and team workflows.",
+      "author": {
+        "@type": "Person",
+        "name": "Ram Guthula"
+      },
+      "publisher": {
+        "@type": "Person",
+        "name": "Ram Guthula"
+      },
+      "mainEntityOfPage": "https://www.ramguthula.com/articles/terraform-for-beginners.html",
+      "datePublished": "2026-04-30",
+      "dateModified": "2026-04-30"
+    }
+  </script>
+</head>
+<body data-article-slug="terraform-for-beginners">
+  <div class="page-shell"></div>
+
+  <main class="article-layout">
+    <header class="article-header-shell">
+      <a class="back-link" href="../index.html#content">Back to home</a>
+      <p class="section-kicker">Beginner Guide</p>
+      <h1>Terraform for beginners: what to learn first</h1>
+      <p class="article-standfirst">Terraform gets much easier once you learn the pieces in the right order. This guide focuses on the sequence that helps new practitioners build confidence fast.</p>
+      <div class="article-meta">
+        <span>By Ram Guthula</span>
+        <span>April 30, 2026</span>
+        <span>8 min read</span>
+      </div>
+    </header>
+
+    <article class="article-body">
+      <section>
+        <h2>Start with the workflow, not the syntax</h2>
+        <p>Most beginners get blocked because they try to memorize every Terraform block before they understand the everyday workflow. A better first step is learning the lifecycle of an infrastructure change: write configuration, initialize providers, preview changes, apply safely, and review the result.</p>
+        <p>Once that loop feels natural, the syntax stops feeling abstract. Terraform becomes a tool for describing infrastructure changes rather than a collection of keywords to memorize.</p>
+      </section>
+
+      <section>
+        <h2>The first concepts worth mastering</h2>
+        <p>These are the concepts that create the biggest early payoff:</p>
+        <ul>
+          <li>Providers and resources: understand how Terraform talks to a cloud platform and what a resource block represents.</li>
+          <li>State: learn why state exists, why it matters, and why teams should treat it carefully.</li>
+          <li>Variables and outputs: use inputs and outputs to keep configurations reusable and readable.</li>
+          <li>Plan versus apply: preview every change before execution so infrastructure work stays intentional.</li>
+          <li>Remote backends: move beyond local state quickly if you are working with a team.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>What to postpone until later</h2>
+        <p>Beginners do not need to master every advanced topic immediately. Dynamic blocks, complex module composition, multi-account patterns, and advanced policy tooling are useful, but they should come after the basics feel steady.</p>
+        <p>Early progress matters. A simple configuration that creates a network, compute layer, or storage resource teaches more than reading ten pages of theory.</p>
+      </section>
+
+      <section>
+        <h2>A practical learning sequence</h2>
+        <ol>
+          <li>Create one small local project and run `terraform init`, `plan`, and `apply` until the workflow feels natural.</li>
+          <li>Add variables and outputs so the configuration becomes easier to reuse.</li>
+          <li>Move state to a remote backend and understand locking and collaboration risks.</li>
+          <li>Refactor repeated configuration into a module.</li>
+          <li>Introduce environment separation only after the single-environment flow is clear.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>How teams usually get Terraform wrong</h2>
+        <p>Teams often scale Terraform before they standardize naming, ownership, state strategy, and review workflows. That creates fragile repositories and unclear blast radius. Good Terraform practice is not only about writing modules. It is also about defining how changes are reviewed, tested, and promoted safely.</p>
+      </section>
+
+      <section>
+        <h2>Best next step</h2>
+        <p>After reading this, pair the roadmap with a hands-on repo so the concepts turn into muscle memory. The linked resource below is a good next stop.</p>
+        <p><a href="https://github.com/ramchandra-guthula/terraform" target="_blank" rel="noreferrer">Explore the Terraform learning repository</a></p>
+      </section>
+    </article>
+
+    <aside class="article-footer-card">
+      <h2>Continue reading</h2>
+      <div class="mini-link-list" data-related-articles></div>
+    </aside>
+  </main>
+
+  <script src="../assets/js/site-data.js"></script>
+  <script src="../assets/js/script.js"></script>
+</body>
+</html>
