@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Ram Guthula</title>
+    <link>https://www.ramguthula.com/</link>
+    <description>Cloud architecture, DevOps, Kubernetes, Terraform, and platform engineering articles from Ram Guthula.</description>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 30 Apr 2026 12:00:00 GMT</lastBuildDate>
+
+    <item>
+      <title>Terraform for Beginners: What to Learn First</title>
+      <link>https://www.ramguthula.com/articles/terraform-for-beginners.html</link>
+      <guid>https://www.ramguthula.com/articles/terraform-for-beginners.html</guid>
+      <pubDate>Thu, 30 Apr 2026 12:00:00 GMT</pubDate>
+      <description>A practical beginner roadmap for learning Terraform, from providers and state to modules, environments, and team workflows.</description>
+    </item>
+
+    <item>
+      <title>Kubernetes on AWS: A Pragmatic Operating Model</title>
+      <link>https://www.ramguthula.com/articles/kubernetes-on-aws.html</link>
+      <guid>https://www.ramguthula.com/articles/kubernetes-on-aws.html</guid>
+      <pubDate>Thu, 30 Apr 2026 12:00:00 GMT</pubDate>
+      <description>A practical operating model for Kubernetes on AWS, covering standardization, observability, ownership, security, and delivery guardrails.</description>
+    </item>
+
+    <item>
+      <title>Platform Engineering Best Practices That Actually Help</title>
+      <link>https://www.ramguthula.com/articles/platform-engineering-best-practices.html</link>
+      <guid>https://www.ramguthula.com/articles/platform-engineering-best-practices.html</guid>
+      <pubDate>Thu, 30 Apr 2026 12:00:00 GMT</pubDate>
+      <description>Practical platform engineering best practices for building golden paths, self-service workflows, trust, and sustainable developer platforms.</description>
+    </item>
+  </channel>
+</rss>

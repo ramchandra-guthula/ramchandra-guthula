@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kubernetes on AWS: A Pragmatic Operating Model | Ram Guthula</title>
+  <meta name="description" content="A practical operating model for Kubernetes on AWS, covering standardization, observability, ownership, security, and delivery guardrails.">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#0b1220">
+  <link rel="canonical" href="https://www.ramguthula.com/articles/kubernetes-on-aws.html">
+  <link rel="alternate" type="application/rss+xml" title="Ram Guthula Feed" href="https://www.ramguthula.com/feed.xml">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Kubernetes on AWS: A Pragmatic Operating Model">
+  <meta property="og:description" content="How teams can scale EKS with clearer ownership, guardrails, and platform standards.">
+  <meta property="og:url" content="https://www.ramguthula.com/articles/kubernetes-on-aws.html">
+  <meta property="og:image" content="https://www.ramguthula.com/github-header-image.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Kubernetes on AWS: A Pragmatic Operating Model">
+  <meta name="twitter:description" content="How teams can scale EKS with clearer ownership, guardrails, and platform standards.">
+  <meta name="twitter:image" content="https://www.ramguthula.com/github-header-image.png">
+
+  <link rel="shortcut icon" href="../assets/images/logo.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/style.css">
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "Kubernetes on AWS: A Pragmatic Operating Model",
+      "description": "A practical operating model for Kubernetes on AWS, covering standardization, observability, ownership, security, and delivery guardrails.",
+      "author": {
+        "@type": "Person",
+        "name": "Ram Guthula"
+      },
+      "publisher": {
+        "@type": "Person",
+        "name": "Ram Guthula"
+      },
+      "mainEntityOfPage": "https://www.ramguthula.com/articles/kubernetes-on-aws.html",
+      "datePublished": "2026-04-30",
+      "dateModified": "2026-04-30"
+    }
+  </script>
+</head>
+<body data-article-slug="kubernetes-on-aws">
+  <div class="page-shell"></div>
+
+  <main class="article-layout">
+    <header class="article-header-shell">
+      <a class="back-link" href="../index.html#content">Back to home</a>
+      <p class="section-kicker">Platform Operations</p>
+      <h1>Kubernetes on AWS: a pragmatic operating model</h1>
+      <p class="article-standfirst">Running Kubernetes on AWS becomes sustainable when teams standardize the operating model early. The cluster is only one part of the system. The real work is ownership, observability, delivery, and guardrails.</p>
+      <div class="article-meta">
+        <span>By Ram Guthula</span>
+        <span>April 30, 2026</span>
+        <span>9 min read</span>
+      </div>
+    </header>
+
+    <article class="article-body">
+      <section>
+        <h2>Start by reducing variability</h2>
+        <p>One of the fastest ways to create operational drag is letting every team choose a different deployment pattern, ingress model, secret approach, or observability stack. EKS gives flexibility, but platform teams should turn that flexibility into a few supported paths.</p>
+        <p>Standardization is not bureaucracy. It is what allows teams to move faster without re-learning the same production lessons.</p>
+      </section>
+
+      <section>
+        <h2>The platform decisions that matter most</h2>
+        <ul>
+          <li>Cluster strategy: decide whether workloads belong in shared clusters, dedicated clusters, or a hybrid model.</li>
+          <li>Ingress and networking: standardize how services are exposed, secured, and routed.</li>
+          <li>Secrets and identity: make service identity, secret rotation, and least-privilege access a platform feature.</li>
+          <li>Observability: define logging, metrics, tracing, and alerting expectations before scale makes inconsistency expensive.</li>
+          <li>Delivery guardrails: make CI/CD pipelines enforce image policy, environment promotion, and rollback expectations.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Clarify ownership before the first incident</h2>
+        <p>Every production platform eventually hits a moment where something is failing and nobody is sure who owns the fix. That usually means the operating model was never made explicit. Teams should know which responsibilities belong to the platform team and which belong to workload owners.</p>
+        <p>Without that clarity, Kubernetes feels harder than it needs to be because technical issues become coordination issues.</p>
+      </section>
+
+      <section>
+        <h2>Build golden paths for common services</h2>
+        <p>The most effective platform teams do not hand developers a blank cluster. They provide templates, sane defaults, deployment patterns, dashboards, and common operational recipes. This is where platform engineering and Kubernetes operations meet in a useful way.</p>
+      </section>
+
+      <section>
+        <h2>What teams should measure</h2>
+        <p>A good operating model tracks more than CPU and memory. It should also watch deployment success rate, rollback frequency, incident recovery time, and how long it takes a team to launch a new service with the approved platform path.</p>
+      </section>
+
+      <section>
+        <h2>Best next step</h2>
+        <p>If your Kubernetes footprint is growing, document the supported path for one service type first. Then evolve that path into a reusable platform standard instead of trying to solve every workload variation at once.</p>
+        <p><a href="../index.html#resources">See related platform and delivery resources</a></p>
+      </section>
+    </article>
+
+    <aside class="article-footer-card">
+      <h2>Continue reading</h2>
+      <div class="mini-link-list" data-related-articles></div>
+    </aside>
+  </main>
+
+  <script src="../assets/js/site-data.js"></script>
+  <script src="../assets/js/script.js"></script>
+</body>
+</html>
