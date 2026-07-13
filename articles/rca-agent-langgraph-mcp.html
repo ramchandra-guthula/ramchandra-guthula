@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Building an Autonomous RCA Agent with LangGraph and MCP | Ram Guthula</title>
+<meta name="description" content="How a LangGraph-orchestrated agent automatically triages Grafana Alertmanager alerts using MCP integrations with Splunk, GitHub, and an S3 Tables vector store — and safely self-heals in Dev.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0b1220">
+<link rel="canonical" href="https://www.ramguthula.com/articles/rca-agent-langgraph-mcp.html">
+<link rel="alternate" type="application/rss+xml" title="Ram Guthula Feed" href="https://www.ramguthula.com/feed.xml">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Building an Autonomous RCA Agent with LangGraph and MCP">
+<meta property="og:description" content="An autonomous RCA agent that triages Grafana alerts, publishes findings to PagerDuty and Slack, and safely self-heals in Dev.">
+<meta property="og:url" content="https://www.ramguthula.com/articles/rca-agent-langgraph-mcp.html">
+<meta property="og:image" content="https://www.ramguthula.com/github-header-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Building an Autonomous RCA Agent with LangGraph and MCP">
+<meta name="twitter:description" content="How a LangGraph-orchestrated agent automatically triages Grafana alerts and safely self-heals in Dev.">
+<meta name="twitter:image" content="https://www.ramguthula.com/github-header-image.png">
+<link rel="shortcut icon" href="../assets/images/logo.ico" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/style.css">
+<script type="application/ld+json">
+{
+"@context": "https://schema.org",
+"@type": "BlogPosting",
+"headline": "Building an Autonomous RCA Agent with LangGraph and MCP",
+"description": "How a LangGraph-orchestrated agent automatically triages Grafana Alertmanager alerts using MCP integrations with Splunk, GitHub, and an S3 Tables vector store — and safely self-heals in Dev.",
+"author": {
+"@type": "Person",
+"name": "Ram Guthula"
+},
+"publisher": {
+"@type": "Person",
+"name": "Ram Guthula"
+},
+"mainEntityOfPage": "https://www.ramguthula.com/articles/rca-agent-langgraph-mcp.html",
+"datePublished": "2026-07-12",
+"dateModified": "2026-07-12"
+}
+</script>
+</head>
+<body data-article-slug="rca-agent-langgraph-mcp">
+<div class="page-shell"></div>
+<main class="article-layout">
+<header class="article-header-shell">
+<a class="back-link" href="../index.html#content">Back to home</a>
+<p class="section-kicker">AI Agents</p>
+<h1>Building an autonomous RCA agent with LangGraph and MCP</h1>
+<p class="article-standfirst">Most incidents lose their first 15-20 minutes to manual triage: reading dashboards, grepping logs, and checking who deployed what. This is how I built an agent that does that work automatically the moment a Grafana Alertmanager alert fires — and how the same graph was extended into a guarded, Dev-only self-healing loop.</p>
+<div class="article-meta">
+<span>By Ram Guthula</span>
+<span>July 12, 2026</span>
+<span>10 min read</span>
+</div>
+</header>
+
+<article class="article-body">
+
+<section>
+<h2>The problem: triage is still manual</h2>
+<p>Alertmanager tells you <em>that</em> something broke. It rarely tells you <em>why</em>. The on-call engineer still has to pull logs from Splunk, check whether a recent deploy touched the affected service, and remember whether this looks like an incident from three weeks ago. That work is repetitive, time-boxed under pressure, and a major source of on-call burnout — even though most of it follows the same pattern every time.</p>
+<p>I built an autonomous Root Cause Analysis (RCA) agent to own that first pass, so the on-call engineer opens the incident already holding a synthesized explanation instead of a blank dashboard.</p>
+</section>
+
+<section>
+<h2>Architecture: alert to root cause in one automated pass</h2>
+<p>The agent is orchestrated with <strong>LangGraph</strong>, which models the RCA workflow as an explicit state graph — triage, gather, correlate, summarize — rather than a single long prompt. That matters for reliability: each node has a defined input/output contract, can retry independently, and leaves an inspectable trace of how the agent reached its conclusion.</p>
+<p>When Grafana Alertmanager fires a webhook, the graph fans out to three tool integrations over the <strong>Model Context Protocol (MCP)</strong>, run in parallel:</p>
+<ul>
+<li><strong>Splunk MCP</strong> — pulls and correlates logs and metrics around the alert window.</li>
+<li><strong>GitHub MCP</strong> — checks recent deploys, commits, and diffs to the affected service.</li>
+<li><strong>S3 Tables MCP (vector store)</strong> — searches embeddings of past incidents and runbooks for similar failure signatures.</li>
+</ul>
+<p>The agent synthesizes those three evidence streams into a root-cause summary and publishes it automatically: the RCA is posted to the <strong>PagerDuty</strong> incident timeline, and a condensed version goes to the on-call <strong>Slack</strong> channel — before a human has opened a single dashboard.</p>
+
+<img src="../assets/images/rca-agent-architecture-base.png" alt="Architecture diagram: Grafana Alertmanager triggers a LangGraph agent engine, which queries Splunk, GitHub, and an S3 Tables vector database via MCP, then publishes RCA findings to PagerDuty and Slack." loading="lazy">
+
+<p>Using MCP instead of hand-rolled API clients for each tool keeps the integration layer swappable — Splunk could become Datadog, GitHub could become GitLab, without touching the graph logic itself.</p>
+</section>
+
+<section>
+<h2>Extending the graph: guarded self-healing in Dev</h2>
+<p>RCA closes the "why" gap. The natural next question is whether the agent can close the "now what" gap too — at least somewhere safe. Production stays strictly notify-only: no environment where a customer-facing incident is live should have an agent making unsupervised changes. Dev is a different story, and it's where most of the same class of failures (a bad rollout, a crashed pod, a stale config) can be fixed by a small, well-understood action.</p>
+<p>So the same LangGraph graph gained three new nodes and one hard branch:</p>
+<ul>
+<li><strong>Environment Gate</strong> — reads alert metadata and routes Prod alerts to the notify-only path, unconditionally. Only Dev alerts continue into the self-healing branch.</li>
+<li><strong>Remediation Planner</strong> — matches the RCA against the vector store for a prior fix or runbook, and proposes a candidate action (rollback a deploy, restart or scale a workload, revert a config change).</li>
+<li><strong>Risk Guardrail</strong> — classifies the proposed action. Low/medium-risk actions are auto-approved; anything higher-risk is held for a human, even in Dev.</li>
+<li><strong>Executor</strong> — applies the approved action via MCP (a GitHub Actions rollback workflow or a Kubernetes restart/scale call), then re-checks Splunk and Grafana to verify the alert actually cleared before closing the incident.</li>
+</ul>
+
+<img src="../assets/images/rca-agent-architecture-dev-selfheal.png" alt="Architecture diagram showing the Dev-only self-healing extension: an environment gate routes Dev alerts through a remediation planner, risk guardrail, and executor, with verification and a feedback loop back into the vector database." loading="lazy">
+
+<p>Two design choices carry most of the weight here. First, the environment gate is a hard branch, not a policy flag buried in configuration — Prod physically cannot reach the executor node. Second, every outcome (healed or escalated) gets written back into the S3 Tables vector store as a new embedding, so the next RCA — in any environment — has one more real example to match against. The system gets slightly better at diagnosis every time it's used.</p>
+<p>If the executor's fix doesn't resolve the alert on verification, the graph doesn't retry blindly — it escalates to PagerDuty and Slack exactly like a Prod incident would, so a stuck auto-remediation never quietly sits unresolved.</p>
+</section>
+
+<section>
+<h2>What changed operationally</h2>
+<p>The measurable win isn't "fewer incidents" — it's faster, more consistent triage and less repetitive manual digging for on-call engineers. Every alert now arrives with a first-pass explanation attached, common Dev failures resolve themselves inside the guardrails, and the RCA archive compounds over time instead of living in someone's memory of "didn't this happen before?"</p>
+<p>The bigger lesson was architectural: treating the agent as an explicit graph with tool access via MCP — rather than a single opaque prompt — is what made it trustworthy enough to extend into Dev remediation without expanding the blast radius in Prod.</p>
+</section>
+
+</article>
+
+<aside class="article-footer-card">
+<h2>Continue reading</h2>
+<div class="mini-link-list" data-related-articles></div>
+</aside>
+</main>
+<script src="../assets/js/site-data.js"></script>
+<script src="../assets/js/script.js"></script>
+</body>
+</html>
