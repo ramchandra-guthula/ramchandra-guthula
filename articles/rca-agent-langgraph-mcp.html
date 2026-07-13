@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Building an Autonomous RCA Agent with LangGraph and MCP | Ram Guthula</title>
-<meta name="description" content="How a LangGraph-orchestrated agent automatically triages Grafana Alertmanager alerts using MCP integrations with Splunk, GitHub, and an S3 Tables vector store — and safely self-heals in Dev.">
+<meta name="description" content="How a LangGraph-orchestrated agent automatically triages Grafana Alertmanager alerts using MCP integrations with Splunk, GitHub (with per-alert runbooks), and an S3 Tables vector store — and safely self-heals in Dev.">
 <meta name="robots" content="index, follow">
 <meta name="theme-color" content="#0b1220">
 <link rel="canonical" href="https://www.ramguthula.com/articles/rca-agent-langgraph-mcp.html">
@@ -73,14 +73,18 @@
 <p>When Grafana Alertmanager fires a webhook, the graph fans out to three tool integrations over the <strong>Model Context Protocol (MCP)</strong>, run in parallel:</p>
 <ul>
 <li><strong>Splunk MCP</strong> — pulls and correlates logs and metrics around the alert window.</li>
-<li><strong>GitHub MCP</strong> — checks recent deploys, commits, and diffs to the affected service.</li>
-<li><strong>S3 Tables MCP (vector store)</strong> — searches embeddings of past incidents and runbooks for similar failure signatures.</li>
+<li><strong>GitHub MCP</strong> — checks recent deploys and diffs to the affected service, and pulls the runbook mapped to the alert that fired.</li>
+<li><strong>S3 Tables MCP (vector store)</strong> — searches embeddings of past incidents for similar failure signatures.</li>
 </ul>
-<p>The agent synthesizes those three evidence streams into a root-cause summary and publishes it automatically: the RCA is posted to the <strong>PagerDuty</strong> incident timeline, and a condensed version goes to the on-call <strong>Slack</strong> channel — before a human has opened a single dashboard.</p>
+<p>The agent synthesizes those evidence streams into a root-cause summary and publishes it automatically: the RCA is posted to the <strong>PagerDuty</strong> incident timeline, and a condensed version goes to the on-call <strong>Slack</strong> channel — before a human has opened a single dashboard.</p>
 
-<img src="../assets/images/rca-agent-architecture-base.png" alt="Architecture diagram: Grafana Alertmanager triggers a LangGraph agent engine, which queries Splunk, GitHub, and an S3 Tables vector database via MCP, then publishes RCA findings to PagerDuty and Slack." loading="lazy">
+<img src="../assets/images/rca-agent-architecture-base.png" alt="Architecture diagram: Grafana Alertmanager triggers a LangGraph agent engine, which queries Splunk, GitHub (deploy diffs and per-alert runbooks), and an S3 Tables vector database via MCP, then publishes RCA findings to PagerDuty and Slack." loading="lazy">
 
 <p>Using MCP instead of hand-rolled API clients for each tool keeps the integration layer swappable — Splunk could become Datadog, GitHub could become GitLab, without touching the graph logic itself.</p>
+
+<h3>Runbooks, matched automatically, every time</h3>
+<p>The piece that made RCA quality consistent rather than "as good as whoever's on call" is a runbook library that lives in the same GitHub repo the agent already talks to. Every alert rule in Grafana maps to a runbook file — a short, versioned checklist written by whoever last debugged that failure mode: which dashboards to check first, which logs are usually the smoking gun, what the last three incidents of this type turned out to be.</p>
+<p>When an alert fires, the agent doesn't wait to be told which runbook applies. It matches the alert to its runbook automatically through the GitHub MCP integration and folds those steps directly into the gather phase, alongside the Splunk logs and deploy diffs. This isn't limited to Dev or to self-healing — it happens on <em>every</em> alert, in every environment, so the RCA an on-call engineer reads at 3 a.m. reflects the same institutional knowledge a senior engineer would bring, not just whatever that engineer happens to remember under pressure. Runbooks stay in version control, so updating one updates every future RCA that touches that alert.</p>
 </section>
 
 <section>
@@ -89,7 +93,7 @@
 <p>So the same LangGraph graph gained three new nodes and one hard branch:</p>
 <ul>
 <li><strong>Environment Gate</strong> — reads alert metadata and routes Prod alerts to the notify-only path, unconditionally. Only Dev alerts continue into the self-healing branch.</li>
-<li><strong>Remediation Planner</strong> — matches the RCA against the vector store for a prior fix or runbook, and proposes a candidate action (rollback a deploy, restart or scale a workload, revert a config change).</li>
+<li><strong>Remediation Planner</strong> — reads the remediation steps already present in the alert's GitHub runbook, cross-checks the vector store for how similar past incidents were actually fixed, and proposes a candidate action (rollback a deploy, restart or scale a workload, revert a config change).</li>
 <li><strong>Risk Guardrail</strong> — classifies the proposed action. Low/medium-risk actions are auto-approved; anything higher-risk is held for a human, even in Dev.</li>
 <li><strong>Executor</strong> — applies the approved action via MCP (a GitHub Actions rollback workflow or a Kubernetes restart/scale call), then re-checks Splunk and Grafana to verify the alert actually cleared before closing the incident.</li>
 </ul>
