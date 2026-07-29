@@ -648,3 +648,301 @@ button {
     font-size: 2.3rem;
   }
 }
+
+/* ==========================================================================
+   Training series: code blocks, tables, callouts, series navigation
+   Appended for the SRE Training Series. Purely additive.
+   ========================================================================== */
+
+.article-body h3 {
+  margin: 22px 0 10px;
+  font-size: 1.08rem;
+  color: #dce7ff;
+}
+
+.article-body pre {
+  margin: 18px 0 0;
+  padding: 18px 20px;
+  overflow-x: auto;
+  background: #060d1a;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+  line-height: 1.65;
+  -webkit-overflow-scrolling: touch;
+}
+
+.article-body pre code {
+  display: block;
+  color: #cfe0ff;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  white-space: pre;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+.article-body :not(pre) > code {
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(120, 150, 210, 0.16);
+  border: 1px solid var(--line);
+  color: #ffd9a5;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  word-break: break-word;
+}
+
+.code-label {
+  display: inline-block;
+  margin: 20px 0 -8px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(120, 150, 210, 0.12);
+  border: 1px solid var(--line);
+  color: #93a6ca;
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.table-scroll {
+  margin-top: 18px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.article-body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  min-width: 480px;
+}
+
+.article-body th,
+.article-body td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  vertical-align: top;
+  line-height: 1.6;
+}
+
+.article-body thead th {
+  background: var(--card-alt);
+  color: #dce7ff;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.article-body tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.callout {
+  margin-top: 20px;
+  padding: 16px 20px;
+  border-radius: var(--radius-md);
+  background: var(--card-alt);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+}
+
+.callout.warn {
+  border-left-color: var(--accent-strong);
+}
+
+.callout.lab {
+  border-left-color: var(--success);
+}
+
+.callout p {
+  margin: 0;
+}
+
+.callout p + p,
+.callout ul {
+  margin-top: 10px;
+}
+
+.callout strong {
+  color: #ffe1b3;
+}
+
+.key-takeaways {
+  margin-top: 22px;
+  padding: 20px 24px;
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  border: 1px solid var(--line);
+}
+
+.key-takeaways h2 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+}
+
+/* Series navigation and index */
+
+.series-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  color: #93a6ca;
+  font-size: 0.86rem;
+}
+
+.series-progress .progress-track {
+  flex: 1 1 180px;
+  height: 6px;
+  min-width: 140px;
+  border-radius: 999px;
+  background: rgba(120, 150, 210, 0.18);
+  overflow: hidden;
+}
+
+.series-progress .progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+}
+
+.series-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.series-nav a {
+  display: grid;
+  gap: 6px;
+  padding: 18px 20px;
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: #dce7ff;
+  text-decoration: none;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.series-nav a:hover,
+.series-nav a:focus-visible {
+  border-color: rgba(244, 184, 96, 0.55);
+  transform: translateY(-2px);
+}
+
+.series-nav a span {
+  color: #93a6ca;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.series-nav a.next {
+  text-align: right;
+}
+
+.series-nav a.hub-link {
+  grid-column: 1 / -1;
+  text-align: center;
+}
+
+.series-index {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  counter-reset: none;
+}
+
+.series-index a {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 16px;
+  align-items: start;
+  padding: 18px 20px;
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  border: 1px solid var(--line);
+  text-decoration: none;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.series-index a:hover,
+.series-index a:focus-visible {
+  border-color: rgba(244, 184, 96, 0.55);
+  transform: translateY(-2px);
+}
+
+.series-index .num {
+  font-family: var(--font-serif);
+  font-size: 1.9rem;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.series-index h3 {
+  margin: 0 0 6px;
+  font-size: 1.02rem;
+  color: #f2f7ff;
+}
+
+.series-index p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+.series-index .part-meta {
+  margin-top: 8px;
+  color: #7f92b6;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.series-module-title {
+  margin: 26px 0 0;
+  color: #93a6ca;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.faq-item {
+  margin-top: 12px;
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  background: var(--card-alt);
+  border: 1px solid var(--line);
+}
+
+.faq-item summary {
+  cursor: pointer;
+  color: #dce7ff;
+  font-size: 0.98rem;
+}
+
+.faq-item p {
+  margin: 10px 0 0;
+}
+
+@media (max-width: 720px) {
+  .series-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .series-nav a.next {
+    text-align: left;
+  }
+
+  .article-body pre {
+    font-size: 0.8rem;
+    padding: 14px;
+  }
+}
