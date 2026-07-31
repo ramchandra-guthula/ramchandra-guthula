@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SRE Training Series: From Fundamentals to a Production LGTM Stack | Ram Guthula</title>
+  <meta name="description" content="A free 12-part Site Reliability Engineering course covering SLIs, SLOs, error budgets, percentiles, golden signals, PromQL, cardinality, logs, tracing, and building your own LGTM stack.">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#0b1220">
+  <link rel="canonical" href="https://www.ramguthula.com/articles/sre-training-series.html">
+  <link rel="alternate" type="application/rss+xml" title="Ram Guthula Feed" href="https://www.ramguthula.com/feed.xml">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="SRE Training Series: From Fundamentals to a Production LGTM Stack">
+  <meta property="og:description" content="A free 12-part Site Reliability Engineering course covering SLIs, SLOs, error budgets, percentiles, golden signals, PromQL, cardinality, logs, tracing, and building your own LGTM stack.">
+  <meta property="og:url" content="https://www.ramguthula.com/articles/sre-training-series.html">
+  <meta property="og:image" content="https://www.ramguthula.com/github-header-image.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SRE Training Series: From Fundamentals to a Production LGTM Stack">
+  <meta name="twitter:description" content="A free 12-part Site Reliability Engineering course covering SLIs, SLOs, error budgets, percentiles, golden signals, PromQL, cardinality, logs, tracing, and building your own LGTM stack.">
+  <meta name="twitter:image" content="https://www.ramguthula.com/github-header-image.png">
+
+  <link rel="shortcut icon" href="../assets/images/logo.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/style.css">
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Course",
+      "name": "SRE Training Series: From Fundamentals to a Production LGTM Stack",
+      "description": "A free 12-part Site Reliability Engineering course covering SLIs, SLOs, error budgets, percentiles, golden signals, PromQL, cardinality, logs, tracing, and building your own LGTM stack.",
+      "provider": { "@type": "Person", "name": "Ram Guthula", "url": "https://www.ramguthula.com/" },
+      "url": "https://www.ramguthula.com/articles/sre-training-series.html",
+      "isAccessibleForFree": true,
+      "inLanguage": "en",
+      "hasCourseInstance": {
+        "@type": "CourseInstance",
+        "courseMode": "online",
+        "courseWorkload": "PT2H30M"
+      },
+      "hasPart": [
+        { "@type": "TechArticle", "position": 1, "name": "What Is SRE? Fundamentals, Error Budgets, and the SRE vs DevOps Question", "url": "https://www.ramguthula.com/articles/sre-01-what-is-sre.html" },
+        { "@type": "TechArticle", "position": 2, "name": "SLI, SLO, and SLA Explained: Choosing Indicators That Reflect Real User Pain", "url": "https://www.ramguthula.com/articles/sre-02-sli-slo-sla.html" },
+        { "@type": "TechArticle", "position": 3, "name": "Error Budgets and Multi-Window Burn Rate Alerting", "url": "https://www.ramguthula.com/articles/sre-03-error-budgets-burn-rate.html" },
+        { "@type": "TechArticle", "position": 4, "name": "p50, p95, p99: Percentiles, Histograms, and Why Averages Lie", "url": "https://www.ramguthula.com/articles/sre-04-percentiles-p50-p95-p99.html" },
+        { "@type": "TechArticle", "position": 5, "name": "Four Golden Signals, USE, and RED: Utilization, Saturation, and Errors", "url": "https://www.ramguthula.com/articles/sre-05-golden-signals-use-red.html" },
+        { "@type": "TechArticle", "position": 6, "name": "Metrics Fundamentals: Counters, Gauges, Histograms, and PromQL That Works", "url": "https://www.ramguthula.com/articles/sre-06-metrics-and-promql.html" },
+        { "@type": "TechArticle", "position": 7, "name": "Cardinality: Designing Labels That Do Not Bankrupt Your Observability Stack", "url": "https://www.ramguthula.com/articles/sre-07-cardinality.html" },
+        { "@type": "TechArticle", "position": 8, "name": "Logs at Scale: Structured Logging, Loki, and LogQL", "url": "https://www.ramguthula.com/articles/sre-08-logs-and-loki.html" },
+        { "@type": "TechArticle", "position": 9, "name": "Distributed Tracing with OpenTelemetry and Tempo", "url": "https://www.ramguthula.com/articles/sre-09-tracing-otel-tempo.html" },
+        { "@type": "TechArticle", "position": 10, "name": "Build Your Own LGTM Stack: Loki, Grafana, Tempo, and Mimir", "url": "https://www.ramguthula.com/articles/sre-10-build-your-own-lgtm-stack.html" },
+        { "@type": "TechArticle", "position": 11, "name": "Dashboards and Alerts That Work at 3 A.M.", "url": "https://www.ramguthula.com/articles/sre-11-dashboards-and-alerting.html" },
+        { "@type": "TechArticle", "position": 12, "name": "Incident Response, Postmortems, and Scaling the Reliability Practice", "url": "https://www.ramguthula.com/articles/sre-12-incident-response-and-scale.html" }
+      ]
+    }
+  </script>
+</head>
+<body data-article-slug="sre-training-series">
+  <div class="page-shell"></div>
+
+  <main class="article-layout">
+    <header class="article-header-shell">
+      <a class="back-link" href="../index.html#content">Back to home</a>
+      <p class="section-kicker">Training Series</p>
+      <h1>SRE training series</h1>
+      <p class="article-standfirst">A twelve-part course that starts with what Site Reliability Engineering
+      actually is and finishes with a running LGTM stack you built yourself. Every part is self-contained,
+      every concept is paired with configuration you can run, and the whole thing is free.</p>
+      <div class="article-meta">
+        <span>By Ram Guthula</span>
+        <span>12 parts</span>
+        <span>~2 hours of reading</span>
+        <span>Updated July 27, 2026</span>
+      </div>
+    </header>
+
+    <article class="article-body">
+      <section>
+        <h2>Who this is for</h2>
+        <p>Engineers who keep production running and want the vocabulary and the mechanics to do it
+        deliberately rather than reactively. If you have ever been asked "what is our SLO" and answered with
+        a CPU graph, or watched a Prometheus instance fall over after an innocent-looking deploy, this is
+        aimed at you.</p>
+        <p>No prior SRE experience is assumed. You will get more out of the second half if you are
+        comfortable with containers, YAML, and reading a query language, but each part explains its own
+        prerequisites.</p>
+      </section>
+
+      <section>
+        <h2>How the series is structured</h2>
+        <p>The order is deliberate and cumulative. The first three parts establish the reliability contract
+        &mdash; indicators, objectives, and the error budget that makes them enforceable. Parts four to
+        seven cover measurement and instrumentation, including cardinality, which is the design decision
+        that quietly determines your observability bill. Parts eight to ten add logs and traces and then
+        assemble the whole platform. The last two cover operating it.</p>
+        <div class="callout">
+          <p>Every part ends with runnable configuration, and each one maps to a folder in the companion
+          lab repository so you can follow along on a laptop rather than reading about it.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>The curriculum</h2>
+        <div class="series-index" data-series-index="sre"></div>
+      </section>
+
+      <section>
+        <h2>What you will be able to do at the end</h2>
+        <ul>
+          <li>Define SLIs and SLOs for a real service and defend the numbers to product and to leadership.</li>
+          <li>Compute an error budget, write the policy that governs it, and build burn-rate alerts that page on real problems and stay quiet otherwise.</li>
+          <li>Read latency distributions correctly, and explain why the p99 on your dashboard is probably being aggregated wrong.</li>
+          <li>Instrument a service for the four golden signals and write PromQL that returns what you think it returns.</li>
+          <li>Budget metric cardinality before it becomes an outage or an invoice.</li>
+          <li>Run Loki, Grafana, Tempo and Mimir, wired together so a metric spike is one click from the trace and the logs that explain it.</li>
+          <li>Run an incident with a defined structure, and write a postmortem that changes something.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Start here</h2>
+        <p>If you are new to the topic, read the parts in order. If you already have SLOs and want the
+        hands-on platform work, start at Part 6 and treat the earlier parts as reference. If you are here
+        because something is on fire and your observability bill is the fire, go straight to
+        <a href="./sre-07-cardinality.html">Part 7 on cardinality</a>.</p>
+        <p><a href="./sre-01-what-is-sre.html">Begin with Part 1: What is SRE, really &rarr;</a></p>
+      </section>
+    </article>
+
+    <aside class="article-footer-card">
+      <h2>Continue reading</h2>
+      <div class="mini-link-list" data-related-articles></div>
+    </aside>
+  </main>
+
+  <script src="../assets/js/site-data.js"></script>
+  <script src="../assets/js/script.js"></script>
+</body>
+</html>

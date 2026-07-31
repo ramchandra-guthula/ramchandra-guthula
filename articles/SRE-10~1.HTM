@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Build Your Own LGTM Stack: Loki, Grafana, Tempo, and Mimir | Ram Guthula</title>
+  <meta name="description" content="Hands-on guide to running the Grafana LGTM stack: Loki, Grafana, Tempo, Mimir and Alloy with Docker Compose and Kubernetes, including OTel Collector and storage sizing.">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#0b1220">
+  <link rel="canonical" href="https://www.ramguthula.com/articles/sre-10-build-your-own-lgtm-stack.html">
+  <link rel="alternate" type="application/rss+xml" title="Ram Guthula Feed" href="https://www.ramguthula.com/feed.xml">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Build Your Own LGTM Stack: Loki, Grafana, Tempo, and Mimir">
+  <meta property="og:description" content="Hands-on guide to running the Grafana LGTM stack: Loki, Grafana, Tempo, Mimir and Alloy with Docker Compose and Kubernetes, including OTel Collector and storage sizing.">
+  <meta property="og:url" content="https://www.ramguthula.com/articles/sre-10-build-your-own-lgtm-stack.html">
+  <meta property="og:image" content="https://www.ramguthula.com/github-header-image.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Build Your Own LGTM Stack: Loki, Grafana, Tempo, and Mimir">
+  <meta name="twitter:description" content="Hands-on guide to running the Grafana LGTM stack: Loki, Grafana, Tempo, Mimir and Alloy with Docker Compose and Kubernetes, including OTel Collector and storage sizing.">
+  <meta name="twitter:image" content="https://www.ramguthula.com/github-header-image.png">
+
+  <link rel="shortcut icon" href="../assets/images/logo.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/style.css">
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Build Your Own LGTM Stack: Loki, Grafana, Tempo, and Mimir",
+      "description": "Hands-on guide to running the Grafana LGTM stack: Loki, Grafana, Tempo, Mimir and Alloy with Docker Compose and Kubernetes, including OTel Collector and storage sizing.",
+      "author": { "@type": "Person", "name": "Ram Guthula" },
+      "publisher": { "@type": "Person", "name": "Ram Guthula" },
+      "mainEntityOfPage": "https://www.ramguthula.com/articles/sre-10-build-your-own-lgtm-stack.html",
+      "datePublished": "2026-07-27",
+      "dateModified": "2026-07-27",
+      "isPartOf": {
+        "@type": "Series",
+        "name": "SRE Training Series",
+        "url": "https://www.ramguthula.com/articles/sre-training-series.html"
+      },
+      "position": 10
+    }
+  </script>
+</head>
+<body data-article-slug="sre-10-build-your-own-lgtm-stack" data-series="sre" data-series-part="10">
+  <div class="page-shell"></div>
+
+  <main class="article-layout">
+    <header class="article-header-shell">
+      <a class="back-link" href="./sre-training-series.html">Back to the SRE series</a>
+      <p class="section-kicker">Part 10 - Platform</p>
+      <h1>Building your own LGTM stack</h1>
+      <p class="article-standfirst">This is the hands-on part. A single compose file gets you metrics, logs, traces and dashboards on a laptop, and the same components scale to a multi-tenant platform.</p>
+      <div class="article-meta">
+        <span>By Ram Guthula</span>
+        <span>July 27, 2026</span>
+        <span>15 min read</span>
+      </div>
+      <div class="series-progress" data-series-progress></div>
+    </header>
+
+    <article class="article-body">
+      <section>
+        <h2>What LGTM actually is</h2>
+        <p>LGTM is Grafana Labs' observability stack, and the acronym is a backronym that happens to be
+ convenient. All four components share the same architecture: stateless microservices, object storage as
+ the only durable dependency, and horizontal scalability by component.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th scope="col">Component</th><th scope="col">Signal</th><th scope="col">Replaces</th><th scope="col">Storage model</th></tr></thead>
+            <tbody>
+            <tr><td><strong>L</strong>oki</td><td>Logs</td><td>Elasticsearch / Splunk</td><td>Label index + compressed chunks in object storage</td></tr>
+            <tr><td><strong>G</strong>rafana</td><td>Visualisation</td><td>Kibana / vendor UI</td><td>Small relational DB for dashboards and config</td></tr>
+            <tr><td><strong>T</strong>empo</td><td>Traces</td><td>Jaeger / Zipkin</td><td>Trace ID index + blocks in object storage</td></tr>
+            <tr><td><strong>M</strong>imir</td><td>Metrics</td><td>Long-term Prometheus, Thanos, Cortex</td><td>TSDB blocks in object storage</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>In front of them sits a collector &mdash; Grafana Alloy or the OpenTelemetry Collector &mdash; that
+ scrapes, receives, processes, and routes everything. Alloy is Grafana's distribution and speaks all four
+ backends natively; the OTel Collector is the vendor-neutral choice. Both work; pick one and standardise
+ on it.</p>
+      </section>
+      <section>
+        <h2>The whole stack on a laptop</h2>
+        <p>This compose file gives you a working end-to-end pipeline: a demo app emitting metrics, logs and
+ traces, a collector, all four backends, and Grafana pre-provisioned with datasources and the correlation
+ links from Parts 8 and 9.</p>
+      <p class="code-label">docker-compose.yaml</p>
+      <pre><code>services:
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    ports: ["9000:9000", "9001:9001"]
+    volumes: ["minio-data:/data"]
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      retries: 12
+
+  createbuckets:
+    image: minio/mc:latest
+    depends_on:
+      minio: { condition: service_healthy }
+    entrypoint: &gt;
+      /bin/sh -c "
+      mc alias set local http://minio:9000 minio minio123 &amp;&amp;
+      mc mb -p local/mimir local/loki local/tempo &amp;&amp;
+      exit 0"
+
+  mimir:
+    image: grafana/mimir:latest
+    command: ["-config.file=/etc/mimir/mimir.yaml", "-target=all"]
+    volumes:
+      - ./mimir/mimir.yaml:/etc/mimir/mimir.yaml:ro
+      - mimir-data:/data
+    ports: ["9009:9009"]
+    depends_on: [createbuckets]
+
+  loki:
+    image: grafana/loki:latest
+    command: ["-config.file=/etc/loki/loki.yaml"]
+    volumes:
+      - ./loki/loki.yaml:/etc/loki/loki.yaml:ro
+      - loki-data:/loki
+    ports: ["3100:3100"]
+    depends_on: [createbuckets]
+
+  tempo:
+    image: grafana/tempo:latest
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo-data:/var/tempo
+    ports: ["3200:3200"]
+    depends_on: [createbuckets]
+
+  alloy:
+    image: grafana/alloy:latest
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy-data:/var/lib/alloy/data
+    ports:
+      - "12345:12345"   # Alloy UI - genuinely useful for debugging pipelines
+      - "4317:4317"     # OTLP gRPC
+      - "4318:4318"     # OTLP HTTP
+    depends_on: [mimir, loki, tempo]
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_FEATURE_TOGGLES_ENABLE: traceqlEditor,tracesEmbeddedFlameGraph
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports: ["3000:3000"]
+    depends_on: [mimir, loki, tempo]
+
+volumes:
+  minio-data:
+  mimir-data:
+  loki-data:
+  tempo-data:
+  alloy-data:</code></pre>
+      </section>
+      <section>
+        <h2>One collector configuration for all three signals</h2>
+      <p class="code-label">alloy/config.alloy</p>
+      <pre><code>// alloy/config.alloy
+
+// ---------- METRICS ----------
+prometheus.exporter.unix "node" { }
+
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+prometheus.scrape "everything" {
+  targets = concat(
+    prometheus.exporter.unix.node.targets,
+    discovery.docker.containers.targets,
+  )
+  scrape_interval = "15s"
+  forward_to = [prometheus.relabel.cardinality_guard.receiver]
+}
+
+// Cardinality control at the collector - Part 7 in practice
+prometheus.relabel "cardinality_guard" {
+  forward_to = [prometheus.remote_write.mimir.receiver]
+
+  rule {
+    source_labels = ["__name__"]
+    regex  = "go_gc_duration_seconds.*|promhttp_.*"
+    action = "drop"
+  }
+  rule {
+    regex  = "container_label_.*|annotation_.*"
+    action = "labeldrop"
+  }
+}
+
+prometheus.remote_write "mimir" {
+  endpoint {
+    url = "http://mimir:9009/api/v1/push"
+    headers = { "X-Scope-OrgID" = "demo" }
+  }
+}
+
+// ---------- LOGS ----------
+loki.source.docker "containers" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.docker.containers.targets
+  forward_to = [loki.process.parse.receiver]
+}
+
+loki.process "parse" {
+  forward_to = [loki.write.loki.receiver]
+
+  stage.json {
+    expressions = { level = "level", trace_id = "trace_id" }
+  }
+  stage.labels {
+    values = { level = "" }          // bounded -&gt; label
+  }
+  stage.structured_metadata {
+    values = { trace_id = "" }       // unbounded -&gt; structured metadata
+  }
+}
+
+loki.write "loki" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+    headers = { "X-Scope-OrgID" = "demo" }
+  }
+}
+
+// ---------- TRACES ----------
+otelcol.receiver.otlp "default" {
+  grpc { endpoint = "0.0.0.0:4317" }
+  http { endpoint = "0.0.0.0:4318" }
+
+  output {
+    traces  = [otelcol.processor.batch.default.input]
+    metrics = [otelcol.exporter.prometheus.to_mimir.input]
+    logs    = [otelcol.exporter.loki.to_loki.input]
+  }
+}
+
+otelcol.processor.batch "default" {
+  send_batch_size = 1000
+  timeout         = "5s"
+  output {
+    traces = [otelcol.exporter.otlp.tempo.input]
+  }
+}
+
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo:4317"
+    tls { insecure = true }
+  }
+}
+
+otelcol.exporter.prometheus "to_mimir" {
+  forward_to = [prometheus.remote_write.mimir.receiver]
+}
+
+otelcol.exporter.loki "to_loki" {
+  forward_to = [loki.write.loki.receiver]
+}</code></pre>
+        <div class="callout">
+          <p>Alloy's UI on port 12345 renders the pipeline as a live graph with the health of every component and sample data flowing through it. When something is not arriving, that page tells you which stage dropped it in about ten seconds. Learn it early.</p>
+        </div>
+      </section>
+      <section>
+        <h2>Wiring the correlations</h2>
+        <p>The stack is only worth the effort if the signals link to each other. This provisioning file connects
+ all three directions: metric exemplar to trace, trace to logs, and log to trace.</p>
+      <p class="code-label">grafana/provisioning/datasources/datasources.yaml</p>
+      <pre><code>apiVersion: 1
+datasources:
+  - name: Mimir
+    type: prometheus
+    uid: mimir
+    url: http://mimir:9009/prometheus
+    isDefault: true
+    jsonData:
+      httpHeaderName1: X-Scope-OrgID
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: tempo
+    secureJsonData:
+      httpHeaderValue1: demo
+
+  - name: Loki
+    type: loki
+    uid: loki
+    url: http://loki:3100
+    jsonData:
+      httpHeaderName1: X-Scope-OrgID
+      derivedFields:
+        - name: TraceID
+          matcherType: label
+          matcherRegex: trace_id
+          url: "$${__value.raw}"
+          datasourceUid: tempo
+    secureJsonData:
+      httpHeaderValue1: demo
+
+  - name: Tempo
+    type: tempo
+    uid: tempo
+    url: http://tempo:3200
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: "-5m"
+        spanEndTimeShift: "5m"
+        filterByTraceID: true
+      tracesToMetrics:
+        datasourceUid: mimir
+        queries:
+          - name: "Request rate"
+            query: 'sum(rate(traces_spanmetrics_calls_total{$$__tags}[5m]))'
+      serviceMap:
+        datasourceUid: mimir
+      nodeGraph:
+        enabled: true</code></pre>
+      </section>
+      <section>
+        <h2>Moving it to Kubernetes</h2>
+        <p>The compose stack teaches you the moving parts. For anything beyond a laptop, use the official Helm
+ charts and run each backend in a scalable mode rather than monolithic.</p>
+      <p class="code-label">Helm installation</p>
+      <pre><code># Add the repo once
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+
+# Mimir - distributed mode
+helm upgrade --install mimir grafana/mimir-distributed \
+  --namespace observability --create-namespace \
+  --values values/mimir.yaml
+
+# Loki - simple scalable mode: read, write and backend targets.
+# Choose this over microservices mode until you have a reason not to.
+helm upgrade --install loki grafana/loki \
+  --namespace observability \
+  --set deploymentMode=SimpleScalable \
+  --values values/loki.yaml
+
+# Tempo - distributed
+helm upgrade --install tempo grafana/tempo-distributed \
+  --namespace observability \
+  --values values/tempo.yaml
+
+# Alloy as a DaemonSet for node and pod telemetry
+helm upgrade --install alloy grafana/alloy \
+  --namespace observability \
+  --values values/alloy.yaml
+
+helm upgrade --install grafana grafana/grafana \
+  --namespace observability \
+  --values values/grafana.yaml</code></pre>
+      <p class="code-label">values/mimir.yaml</p>
+      <pre><code># values/mimir.yaml - the settings that matter most
+mimir:
+  structuredConfig:
+    limits:
+      # The cardinality circuit breakers. Set them before you need them.
+      max_global_series_per_user: 5000000
+      max_global_series_per_metric: 200000
+      ingestion_rate: 250000
+      ingestion_burst_size: 500000
+      max_label_names_per_series: 30
+      compactor_blocks_retention_period: 8760h   # 1 year
+
+    common:
+      storage:
+        backend: s3
+        s3:
+          endpoint: s3.eu-west-1.amazonaws.com
+          bucket_name: mimir-prod
+          region: eu-west-1
+
+# Multi-tenancy: each team gets its own X-Scope-OrgID and its own
+# limits, so one team's cardinality incident cannot take out the others.
+multitenancy_enabled: true
+
+ingester:
+  replicas: 3
+  zoneAwareReplication:
+    enabled: true
+  persistentVolume:
+    size: 100Gi
+
+querier:
+  replicas: 4
+
+store_gateway:
+  replicas: 3
+  zoneAwareReplication:
+    enabled: true</code></pre>
+      </section>
+      <section>
+        <h2>Sizing and cost</h2>
+        <p>Rough figures for planning. Measure your own workload before committing to hardware, but these get you
+ within the right order of magnitude.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th scope="col">Workload</th><th scope="col">Metrics</th><th scope="col">Logs</th><th scope="col">Traces</th></tr></thead>
+            <tbody>
+            <tr><td>Small &mdash; 50 services, 200 pods</td><td>~500k active series, 2 CPU / 8 GB per ingester</td><td>~50 GB/day, 2 write + 2 read replicas</td><td>~5 GB/day at 10% sampling</td></tr>
+            <tr><td>Medium &mdash; 300 services, 2,000 pods</td><td>~5M active series, 3 ingesters x 4 CPU / 16 GB</td><td>~500 GB/day, 3 write + 3 read</td><td>~50 GB/day</td></tr>
+            <tr><td>Large &mdash; 1,000+ services</td><td>50M+ series, dedicated ingester pool, zone-aware</td><td>5+ TB/day, microservices mode</td><td>~500 GB/day, tail sampling essential</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul>
+          <li><strong>Object storage is the cheap part.</strong> Compute for ingesters and queriers dominates the bill; size those carefully and let storage grow.</li>
+          <li><strong>Set retention per signal.</strong> Metrics 12 months, logs 30 days, traces 7&ndash;14 days is a common and defensible split.</li>
+          <li><strong>Downsample old metrics.</strong> Recording rules that aggregate away instance-level labels cut long-term series count by an order of magnitude.</li>
+          <li><strong>Enable the query result cache.</strong> Dashboard queries repeat constantly and caching them is close to free.</li>
+          <li><strong>Set per-tenant limits from day one.</strong> They are the only thing standing between one team's bad deploy and a platform-wide outage.</li>
+        </ul>
+        <div class="callout lab">
+          <p>Hands-on: <code>labs/10-lgtm-stack</code> in the <a href="https://github.com/ramchandra-guthula/sre-training-labs" target="_blank" rel="noreferrer">companion repo</a> contains this entire compose stack, all configuration files, provisioned dashboards, and a <code>make demo</code> target that starts everything and generates realistic traffic.</p>
+        </div>
+      </section>
+      <section class="key-takeaways">
+        <h2>Key takeaways</h2>
+        <ul>
+          <li>LGTM is Loki, Grafana, Tempo, Mimir - four components sharing one architecture: stateless services over object storage.</li>
+          <li>Run one collector, Alloy or the OTel Collector, handling all three signals. Two collectors means two places to debug.</li>
+          <li>Enforce cardinality control at the collector, not just at the application.</li>
+          <li>The correlation configuration - exemplars, derived fields, traces-to-logs - is what makes the stack worth running.</li>
+          <li>On Kubernetes use the Helm charts in scalable mode, not the monolithic single-binary mode.</li>
+          <li>Set per-tenant limits before you need them. They turn a platform outage into one team's failed writes.</li>
+          <li>Different retention per signal: metrics in months, logs in weeks, traces in days.</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Quick answers</h2>
+        <details class="faq-item">
+          <summary>Do I need Mimir, or is plain Prometheus enough?</summary>
+          <p>Plain Prometheus is enough for a single cluster with fewer than a few million series and retention measured in weeks. Mimir earns its complexity when you need long-term retention, a global query view across clusters, multi-tenancy with per-team limits, or high availability with deduplication. Many teams run Prometheus for scraping and remote-write to Mimir for storage.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Alloy or the OpenTelemetry Collector?</summary>
+          <p>Alloy if you are committed to the Grafana stack: it handles Prometheus scraping, Loki shipping, and OTLP in one binary with a good debugging UI. The OTel Collector if you want vendor neutrality or already have an OTel-based pipeline. Alloy embeds OTel Collector components, so the two are closer than they appear.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Can I run this stack on a single node?</summary>
+          <p>Yes, for development and small production workloads. Loki, Tempo and Mimir all have single-binary modes and can use local filesystem storage. The compose stack in the companion repo runs comfortably in about 4 GB of RAM. Move to distributed mode when a single node can no longer hold the ingest rate or when you need availability guarantees.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How do I migrate from an existing Prometheus?</summary>
+          <p>Add remote_write to Mimir alongside your existing setup and run both in parallel. Point Grafana at Mimir for historical queries while Prometheus continues to handle scraping and alerting. Once you trust the data, move rule evaluation to the Mimir ruler and shrink local Prometheus retention. There is no cutover moment, which is the point.</p>
+        </details>
+      </section>
+    </article>
+
+    <nav class="series-nav" data-series-nav aria-label="Series navigation"></nav>
+
+    <aside class="article-footer-card">
+      <h2>Continue reading</h2>
+      <div class="mini-link-list" data-related-articles></div>
+    </aside>
+  </main>
+
+  <script src="../assets/js/site-data.js"></script>
+  <script src="../assets/js/script.js"></script>
+</body>
+</html>
