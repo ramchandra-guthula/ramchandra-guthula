@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>p50, p95, p99: Percentiles, Histograms, and Why Averages Lie | Ram Guthula</title>
+  <meta name="description" content="Understand latency percentiles p50, p90, p95, p99 and p99.9, how Prometheus histograms and quantiles work, why you cannot average percentiles, and how to pick bucket boundaries.">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#0b1220">
+  <link rel="canonical" href="https://www.ramguthula.com/articles/sre-04-percentiles-p50-p95-p99.html">
+  <link rel="alternate" type="application/rss+xml" title="Ram Guthula Feed" href="https://www.ramguthula.com/feed.xml">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="p50, p95, p99: Percentiles, Histograms, and Why Averages Lie">
+  <meta property="og:description" content="Understand latency percentiles p50, p90, p95, p99 and p99.9, how Prometheus histograms and quantiles work, why you cannot average percentiles, and how to pick bucket boundaries.">
+  <meta property="og:url" content="https://www.ramguthula.com/articles/sre-04-percentiles-p50-p95-p99.html">
+  <meta property="og:image" content="https://www.ramguthula.com/github-header-image.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="p50, p95, p99: Percentiles, Histograms, and Why Averages Lie">
+  <meta name="twitter:description" content="Understand latency percentiles p50, p90, p95, p99 and p99.9, how Prometheus histograms and quantiles work, why you cannot average percentiles, and how to pick bucket boundaries.">
+  <meta name="twitter:image" content="https://www.ramguthula.com/github-header-image.png">
+
+  <link rel="shortcut icon" href="../assets/images/logo.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/style.css">
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "p50, p95, p99: Percentiles, Histograms, and Why Averages Lie",
+      "description": "Understand latency percentiles p50, p90, p95, p99 and p99.9, how Prometheus histograms and quantiles work, why you cannot average percentiles, and how to pick bucket boundaries.",
+      "author": { "@type": "Person", "name": "Ram Guthula" },
+      "publisher": { "@type": "Person", "name": "Ram Guthula" },
+      "mainEntityOfPage": "https://www.ramguthula.com/articles/sre-04-percentiles-p50-p95-p99.html",
+      "datePublished": "2026-07-27",
+      "dateModified": "2026-07-27",
+      "isPartOf": {
+        "@type": "Series",
+        "name": "SRE Training Series",
+        "url": "https://www.ramguthula.com/articles/sre-training-series.html"
+      },
+      "position": 4
+    }
+  </script>
+</head>
+<body data-article-slug="sre-04-percentiles-p50-p95-p99" data-series="sre" data-series-part="4">
+  <div class="page-shell"></div>
+
+  <main class="article-layout">
+    <header class="article-header-shell">
+      <a class="back-link" href="./sre-training-series.html">Back to the SRE series</a>
+      <p class="section-kicker">Part 4 - Measurement</p>
+      <h1>p50, p95, p99 and the truth about averages</h1>
+      <p class="article-standfirst">Average latency is the most confidently wrong number on your dashboard. Percentiles fix that, but only if you understand how they are computed and how they must not be combined.</p>
+      <div class="article-meta">
+        <span>By Ram Guthula</span>
+        <span>July 27, 2026</span>
+        <span>11 min read</span>
+      </div>
+      <div class="series-progress" data-series-progress></div>
+    </header>
+
+    <article class="article-body">
+      <section>
+        <h2>The average is the most confidently wrong number on your dashboard</h2>
+        <p>Take a service handling 10,000 requests. Nine thousand nine hundred of them return in 50ms. One
+ hundred take 30 seconds because they hit a lock contention path.</p>
+      <p class="code-label">Worked example</p>
+      <pre><code>mean latency = (9900 x 0.05 + 100 x 30) / 10000
+             = (495 + 3000) / 10000
+             = 0.3495 s
+
+Dashboard says:  "349ms average latency"   -&gt; looks acceptable
+Reality:         1 in 100 users waits 30 seconds -&gt; they leave</code></pre>
+        <p>The mean is a single number describing a distribution that is not remotely normal. Latency
+ distributions in real systems are right-skewed with long tails, and the mean sits in a region where almost
+ no actual request lives. It is not a summary of user experience; it is an artefact.</p>
+        <div class="callout">
+          <p>The median has the opposite failure. It is robust against the tail, which means it is <em>blind</em> to the tail. p50 tells you the service is healthy for typical users while a tenth of your traffic times out.</p>
+        </div>
+      </section>
+      <section>
+        <h2>What a percentile actually means</h2>
+        <p>The pth percentile is the value below which p percent of observations fall. If p99 latency is 800ms,
+ then 99% of requests completed in under 800ms and 1% took longer.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th scope="col">Percentile</th><th scope="col">Reads as</th><th scope="col">Tells you about</th><th scope="col">Typical use</th></tr></thead>
+            <tbody>
+            <tr><td>p50 (median)</td><td>Half of requests are faster than this</td><td>The typical experience</td><td>Baseline health, capacity trends</td></tr>
+            <tr><td>p90</td><td>9 in 10 requests are faster</td><td>Mild degradation</td><td>Early warning signal</td></tr>
+            <tr><td>p95</td><td>19 in 20 requests are faster</td><td>The unhappy minority</td><td>Common SLO threshold</td></tr>
+            <tr><td>p99</td><td>99 in 100 requests are faster</td><td>The tail that generates support tickets</td><td>Standard latency SLO</td></tr>
+            <tr><td>p99.9</td><td>999 in 1,000 requests are faster</td><td>Rare pathological paths, GC pauses, cold caches</td><td>High-scale services only</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Why the tail matters more than it looks</h3>
+        <p>The instinctive response to p99 is that 1% is a rounding error. Two things make that wrong. First, it
+ is not 1% of users, it is 1% of requests &mdash; and a single page load may make twenty requests, so far
+ more than 1% of page loads contain at least one slow call. Second, tail latency compounds under
+ fan-out.</p>
+      <p class="code-label">Tail amplification</p>
+      <pre><code>A request that fans out to N backend calls in parallel and must wait
+for all of them is slow if ANY of them is slow.
+
+P(request is fast) = (1 - 0.01)^N        # each backend has p99 = 1s
+
+  N =   1  -&gt;  99.0% fast   -&gt;  1 in 100 requests hits the tail
+  N =   5  -&gt;  95.1% fast   -&gt;  1 in  20
+  N =  10  -&gt;  90.4% fast   -&gt;  1 in  10
+  N =  50  -&gt;  60.5% fast   -&gt;  2 in   5
+  N = 100  -&gt;  36.6% fast   -&gt;  nearly 2 in 3 requests hit the tail
+
+Your backend p99 has become your frontend p50.</code></pre>
+        <p>This is why microservice architectures make tail latency a first-class concern rather than a nicety.
+ The more services a request touches, the more the aggregate experience is governed by the worst
+ percentile, not the typical one.</p>
+      </section>
+      <section>
+        <h2>How Prometheus computes percentiles</h2>
+        <p>Prometheus does not store individual observations. A histogram metric stores counts in cumulative
+ buckets, defined at instrumentation time by their upper bound, the <code>le</code> label. Every
+ observation increments every bucket whose bound it falls under.</p>
+      <p class="code-label">Histogram anatomy</p>
+      <pre><code># One scrape of http_request_duration_seconds
+
+http_request_duration_seconds_bucket{le="0.005"}  120
+http_request_duration_seconds_bucket{le="0.01"}   450
+http_request_duration_seconds_bucket{le="0.025"}  1890
+http_request_duration_seconds_bucket{le="0.05"}   7200
+http_request_duration_seconds_bucket{le="0.1"}    9100
+http_request_duration_seconds_bucket{le="0.25"}   9800
+http_request_duration_seconds_bucket{le="0.5"}    9950
+http_request_duration_seconds_bucket{le="1"}      9990
+http_request_duration_seconds_bucket{le="+Inf"}   10000
+http_request_duration_seconds_sum                 812.4
+http_request_duration_seconds_count               10000
+
+# Buckets are CUMULATIVE. 9,100 requests took &lt;= 100ms.
+# The number that took between 50ms and 100ms is 9100 - 7200 = 1900.</code></pre>
+        <p><code>histogram_quantile()</code> finds the bucket containing the target rank and interpolates
+ linearly within it. That interpolation is the source of every surprising histogram result: the accuracy of
+ your p99 depends entirely on whether you have a bucket boundary near the real p99.</p>
+      <p class="code-label">The correct pattern</p>
+      <pre><code># Correct: rate the buckets first, sum by le, then compute the quantile
+histogram_quantile(
+  0.99,
+  sum by (le) (rate(http_request_duration_seconds_bucket{job="checkout-api"}[5m]))
+)
+
+# Per-route p99 - keep route in the grouping alongside le
+histogram_quantile(
+  0.99,
+  sum by (le, route) (rate(http_request_duration_seconds_bucket{job="checkout-api"}[5m]))
+)</code></pre>
+        <div class="callout warn">
+          <p>If your highest finite bucket is 1s and the true p99 is 4s, <code>histogram_quantile</code> cannot tell you that. It reports the highest finite bound. A p99 pinned exactly at a bucket boundary for hours is the classic symptom, and it means your buckets are wrong, not that your latency is suspiciously stable.</p>
+        </div>
+      </section>
+      <section>
+        <h2>Choosing bucket boundaries</h2>
+        <p>Default bucket sets are designed for a generic HTTP service and are wrong for almost everything else.
+ Choose boundaries around the values you actually care about, especially your SLO threshold.</p>
+        <ul>
+          <li><strong>Put a bucket exactly on your SLO threshold.</strong> If the SLO is 'under 400ms', you need an <code>le="0.4"</code> bucket. Without it, your SLI is an interpolation.</li>
+          <li><strong>Space them roughly exponentially</strong> across the range you expect, since latency spans orders of magnitude.</li>
+          <li><strong>Cover the tail.</strong> Your highest finite bucket should sit above your worst realistic latency, usually near your client timeout.</li>
+          <li><strong>Keep the count modest.</strong> Every bucket is a separate time series, multiplied by every other label. Ten to fifteen buckets is usually plenty. Part 7 explains exactly what this costs.</li>
+        </ul>
+      <p class="code-label">Bucket definition</p>
+      <pre><code># Go, prometheus/client_golang
+requestDuration := prometheus.NewHistogramVec(
+    prometheus.HistogramOpts{
+        Name: "http_request_duration_seconds",
+        Help: "Request duration in seconds.",
+        // Tuned for a service with a 400ms SLO and a 10s client timeout.
+        Buckets: []float64{
+            0.005, 0.01, 0.025, 0.05, 0.1, 0.2,
+            0.4,          // &lt;- the SLO threshold, deliberately present
+            0.8, 1.5, 3, 5, 10,
+        },
+    },
+    []string{"route", "method", "code"},
+)</code></pre>
+      <p class="code-label">Same idea in Python</p>
+      <pre><code># Python, prometheus_client
+from prometheus_client import Histogram
+
+REQUEST_DURATION = Histogram(
+    "http_request_duration_seconds",
+    "Request duration in seconds.",
+    ["route", "method", "code"],
+    buckets=(0.005, 0.01, 0.025, 0.05, 0.1, 0.2,
+             0.4,   # SLO threshold
+             0.8, 1.5, 3, 5, 10, float("inf")),
+)</code></pre>
+      </section>
+      <section>
+        <h2>The mistake almost everyone makes: averaging percentiles</h2>
+        <p>Percentiles are not additive. You cannot average them, sum them, or take the maximum across instances
+ and get a meaningful number. This is not a Prometheus quirk; it is a property of quantiles.</p>
+      <p class="code-label">Aggregation order matters</p>
+      <pre><code># WRONG - computes a p99 per instance, then averages those p99s.
+# The result is not the p99 of anything.
+avg(
+  histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))
+)
+
+# ALSO WRONG - the same error hidden inside a Grafana panel that
+# graphs one series per instance and enables the "mean" legend value.
+
+# WRONG in a different way - a "p99 of p99s" across services
+max(service_p99)
+
+# CORRECT - aggregate the underlying buckets, then compute one quantile
+histogram_quantile(
+  0.99,
+  sum by (le) (rate(http_request_duration_seconds_bucket[5m]))
+)</code></pre>
+        <p>The intuition: consider ten instances, nine idle and one overloaded. The nine idle instances each have
+ a p99 of 10ms; the overloaded one has a p99 of 5s. The average of those p99s is about 510ms. But if the
+ overloaded instance is serving 80% of traffic, the true system-wide p99 is close to 5s. Averaging the
+ percentiles produced a number that is wrong by an order of magnitude and wrong in the reassuring
+ direction.</p>
+        <p>The same applies over time. Do not average a p99 graph over a day to get a 'daily p99'. Recompute the
+ quantile from buckets aggregated over the day.</p>
+      </section>
+      <section>
+        <h2>Native histograms</h2>
+        <p>Classic histograms force the trade-off between resolution and cardinality: more buckets means more
+ series. Native histograms, available in Prometheus 2.40+ behind a feature flag and stable in Prometheus
+ 3.x, store the whole distribution in a single series with exponentially spaced buckets generated
+ automatically.</p>
+        <ul>
+          <li>One series per histogram instead of one per bucket, which typically cuts histogram series count by an order of magnitude.</li>
+          <li>Resolution is a schema parameter, not a hand-tuned list, so you stop guessing bucket boundaries.</li>
+          <li>Buckets adapt to the observed range, so a p99 far above your guesses is still measured accurately.</li>
+          <li>Requires protobuf scraping and support in your client library and storage backend, so check the whole chain before adopting.</li>
+        </ul>
+      <p class="code-label">Enabling native histograms</p>
+      <pre><code># prometheus.yml - enable the feature and protobuf negotiation
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: checkout-api
+    # Required for native histogram ingestion on 2.x
+    # (start Prometheus with --enable-feature=native-histograms)
+    static_configs:
+      - targets: ["checkout-api:8080"]
+
+# Query syntax is unchanged - the same function works on both types
+histogram_quantile(0.99, sum by (le) (rate(http_request_duration_seconds[5m])))</code></pre>
+      </section>
+      <section>
+        <h2>The better move: stop reporting percentiles in your SLO</h2>
+        <p>A latency SLO expressed as 'p99 under 400ms' is harder to reason about than it looks, because a
+ percentile is not an event you can count and therefore does not slot cleanly into an error budget. The
+ threshold-count formulation from Part 2 is strictly better:</p>
+      <p class="code-label">Threshold counting beats quantiles for SLOs</p>
+      <pre><code># Instead of: "p99 latency must be under 400ms"
+# Say:         "99% of requests must complete in under 400ms"
+#
+# Which is directly measurable as a good/valid ratio:
+
+sum(rate(http_request_duration_seconds_bucket{le="0.4"}[5m]))
+/
+sum(rate(http_request_duration_seconds_count[5m]))
+
+# This gives you:
+#   - a ratio that plugs straight into the error budget maths
+#   - no interpolation error
+#   - the same burn-rate alert template as availability</code></pre>
+        <p>Keep percentile graphs for debugging, where seeing the shape of the distribution move is exactly what
+ you want. Use threshold ratios for objectives, where you need something countable.</p>
+        <div class="callout lab">
+          <p>Hands-on: <code>labs/04-percentiles</code> in the <a href="https://github.com/ramchandra-guthula/sre-training-labs" target="_blank" rel="noreferrer">companion repo</a> includes a load generator with a configurable injected tail, so you can watch the mean stay flat while p99 triples.</p>
+        </div>
+      </section>
+      <section class="key-takeaways">
+        <h2>Key takeaways</h2>
+        <ul>
+          <li>Averages hide the tail; medians ignore it. Neither describes user experience on a skewed distribution.</li>
+          <li>Tail latency amplifies with fan-out. A backend p99 becomes a frontend p50 at high enough service counts.</li>
+          <li>Prometheus histograms are cumulative bucket counts, and histogram_quantile interpolates. Bucket placement determines accuracy.</li>
+          <li>Always put a bucket boundary exactly on your SLO threshold.</li>
+          <li>Never average, max, or sum percentiles. Aggregate buckets with sum by (le) first, then compute one quantile.</li>
+          <li>Native histograms remove the resolution-versus-cardinality trade-off if your whole pipeline supports them.</li>
+          <li>For SLOs, count requests under a threshold rather than tracking a quantile.</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Quick answers</h2>
+        <details class="faq-item">
+          <summary>Why can I not just average p99 across my instances?</summary>
+          <p>Because quantiles are not additive. The average of per-instance p99s is not the p99 of the combined traffic, and it is biased toward the reassuring answer when load is uneven. Aggregate the histogram buckets with sum by (le) first, then apply histogram_quantile once.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Should I use p95 or p99 for my latency SLO?</summary>
+          <p>p99 for user-facing request paths where a slow request means a lost user, p95 where the workload is more tolerant. The more important choice is the threshold value and whether a bucket boundary sits exactly on it. p99.9 is only meaningful at high request volume, since below roughly 10,000 requests per window it is dominated by noise.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Why is my p99 stuck at exactly the same value for hours?</summary>
+          <p>Almost certainly your highest finite bucket is below the real p99, so histogram_quantile is reporting that bound. Add higher buckets, or move to native histograms.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Are summaries a better choice than histograms?</summary>
+          <p>Rarely. Summaries compute quantiles in the client, which makes them accurate per instance but impossible to aggregate across instances. In any system with more than one replica, histograms are the correct choice.</p>
+        </details>
+      </section>
+    </article>
+
+    <nav class="series-nav" data-series-nav aria-label="Series navigation"></nav>
+
+    <aside class="article-footer-card">
+      <h2>Continue reading</h2>
+      <div class="mini-link-list" data-related-articles></div>
+    </aside>
+  </main>
+
+  <script src="../assets/js/site-data.js"></script>
+  <script src="../assets/js/script.js"></script>
+</body>
+</html>

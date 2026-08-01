@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboards and Alerts That Work at 3 A.M. | Ram Guthula</title>
+  <meta name="description" content="How to design SLO dashboards and alert rules that reduce fatigue: symptom-based alerting, alert routing and grouping, runbook links, and dashboards structured for triage.">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#0b1220">
+  <link rel="canonical" href="https://www.ramguthula.com/articles/sre-11-dashboards-and-alerting.html">
+  <link rel="alternate" type="application/rss+xml" title="Ram Guthula Feed" href="https://www.ramguthula.com/feed.xml">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Dashboards and Alerts That Work at 3 A.M.">
+  <meta property="og:description" content="How to design SLO dashboards and alert rules that reduce fatigue: symptom-based alerting, alert routing and grouping, runbook links, and dashboards structured for triage.">
+  <meta property="og:url" content="https://www.ramguthula.com/articles/sre-11-dashboards-and-alerting.html">
+  <meta property="og:image" content="https://www.ramguthula.com/github-header-image.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Dashboards and Alerts That Work at 3 A.M.">
+  <meta name="twitter:description" content="How to design SLO dashboards and alert rules that reduce fatigue: symptom-based alerting, alert routing and grouping, runbook links, and dashboards structured for triage.">
+  <meta name="twitter:image" content="https://www.ramguthula.com/github-header-image.png">
+
+  <link rel="shortcut icon" href="../assets/images/logo.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/style.css">
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Dashboards and Alerts That Work at 3 A.M.",
+      "description": "How to design SLO dashboards and alert rules that reduce fatigue: symptom-based alerting, alert routing and grouping, runbook links, and dashboards structured for triage.",
+      "author": { "@type": "Person", "name": "Ram Guthula" },
+      "publisher": { "@type": "Person", "name": "Ram Guthula" },
+      "mainEntityOfPage": "https://www.ramguthula.com/articles/sre-11-dashboards-and-alerting.html",
+      "datePublished": "2026-07-27",
+      "dateModified": "2026-07-27",
+      "isPartOf": {
+        "@type": "Series",
+        "name": "SRE Training Series",
+        "url": "https://www.ramguthula.com/articles/sre-training-series.html"
+      },
+      "position": 11
+    }
+  </script>
+</head>
+<body data-article-slug="sre-11-dashboards-and-alerting" data-series="sre" data-series-part="11">
+  <div class="page-shell"></div>
+
+  <main class="article-layout">
+    <header class="article-header-shell">
+      <a class="back-link" href="./sre-training-series.html">Back to the SRE series</a>
+      <p class="section-kicker">Part 11 - Operations</p>
+      <h1>Dashboards and alerts that work at 3 a.m.</h1>
+      <p class="article-standfirst">A good alert wakes a human who can do something about it, with a link to the thing they should do. Everything else is a tax you pay in attrition.</p>
+      <div class="article-meta">
+        <span>By Ram Guthula</span>
+        <span>July 27, 2026</span>
+        <span>11 min read</span>
+      </div>
+      <div class="series-progress" data-series-progress></div>
+    </header>
+
+    <article class="article-body">
+      <section>
+        <h2>The only test that matters</h2>
+        <p>An alert is worth sending if a competent engineer, woken at 3 a.m., can act on it. Everything else is
+ a tax you pay in attrition, and the interest compounds: once a rotation learns that most pages are noise,
+ it starts treating the real ones as noise too.</p>
+        <p>Four questions, and a page needs a yes to all of them:</p>
+        <ol>
+          <li><strong>Is a user affected, or about to be?</strong> If not, it is a ticket at best.</li>
+          <li><strong>Is it urgent?</strong> If it can wait until 9 a.m., it must wait until 9 a.m.</li>
+          <li><strong>Is it actionable?</strong> If the response is 'watch it', there is nothing to page for.</li>
+          <li><strong>Is it novel?</strong> If this fires every week and the fix is always the same, automate the fix instead of paging a person to perform it.</li>
+        </ol>
+        <div class="callout warn">
+          <p>Track pages per on-call shift as a first-class metric. More than two or three actionable pages per week is a system problem, not a person problem. More than one non-actionable page per week and you are actively training the rotation to ignore you.</p>
+        </div>
+      </section>
+      <section>
+        <h2>Symptoms page, causes inform</h2>
+        <p>The most durable rule in alerting: page on what the user experiences, not on what you suspect will
+ cause it. Cause-based alerts multiply without limit, because there are unbounded ways for a system to
+ break and only a handful of ways for a user to notice.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th scope="col">Cause-based (do not page)</th><th scope="col">Symptom-based (page on this)</th></tr></thead>
+            <tbody>
+            <tr><td>CPU above 80%</td><td>Error budget burning at 14.4x</td></tr>
+            <tr><td>Memory above 90%</td><td>p99 latency above the SLO threshold for 10 minutes</td></tr>
+            <tr><td>Pod restarted</td><td>Successful request ratio below target</td></tr>
+            <tr><td>Disk 75% full</td><td>Disk will be full in under 4 hours at the current rate</td></tr>
+            <tr><td>Replica count below desired</td><td>Queue consumer lag growing and not recovering</td></tr>
+            <tr><td>Certificate expires in 30 days</td><td>&mdash; ticket, not page &mdash;</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>The two legitimate exceptions are imminent hard failures and total signal loss. Disk exhaustion causes
+ unrecoverable damage, so predicting it is worth a page. And a service that stopped reporting entirely is
+ indistinguishable from a service that is completely down, so it must page.</p>
+      <p class="code-label">The legitimate cause-based alerts</p>
+      <pre><code>      # Predictive: page on trajectory, not on a threshold
+      - alert: DiskWillFillIn4Hours
+        expr: |
+          predict_linear(node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"}[6h], 4*3600) &lt; 0
+          and
+          node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes &lt; 0.25
+        for: 30m
+        labels: { severity: page }
+        annotations:
+          summary: "{{ $labels.instance }}:{{ $labels.mountpoint }} full in &lt;4h"
+          runbook_url: https://runbooks.internal/infra/disk-full
+
+      # Absence of signal is itself a signal
+      - alert: TargetDown
+        expr: up{job=~"checkout-api|payments-api"} == 0
+        for: 5m
+        labels: { severity: page }
+        annotations:
+          summary: "{{ $labels.job }} on {{ $labels.instance }} not scrapeable"
+
+      # The metric stopped existing entirely - absent() catches what
+      # a threshold rule cannot, because a missing series never fires
+      - alert: NoTrafficReported
+        expr: absent(http_requests_total{job="checkout-api"})
+        for: 10m
+        labels: { severity: page }
+        annotations:
+          summary: "checkout-api is reporting no request metrics at all"</code></pre>
+      </section>
+      <section>
+        <h2>Everything an alert must carry</h2>
+        <p>The alert body is a handover document written in advance. Assume the recipient has never seen this
+ service, because at 3 a.m. that is functionally true.</p>
+      <p class="code-label">A complete alert</p>
+      <pre><code>      - alert: CheckoutErrorBudgetBurnFast
+        expr: |
+          sli:checkout_bad:ratio1h &gt; (14.4 * 0.001)
+          and
+          sli:checkout_bad:ratio5m &gt; (14.4 * 0.001)
+        for: 2m
+        labels:
+          severity: page
+          team: checkout                  # routing
+          service: checkout-api           # routing + grouping
+          slo: checkout-availability      # grouping
+          environment: production
+        annotations:
+          summary: "Checkout burning error budget at 14.4x"
+          description: &gt;-
+            {{ $value | humanizePercentage }} of checkout requests are failing.
+            At this rate the 28-day error budget is exhausted in under 2 days.
+            Started roughly {{ $labels.alertname }} 2 minutes ago.
+          impact: &gt;-
+            Customers cannot complete purchases. Revenue impact is immediate
+            and proportional to the failure rate.
+          runbook_url:   https://runbooks.internal/checkout/error-budget-burn
+          dashboard_url: https://grafana.internal/d/checkout-slo?var-env=production
+          logs_url:      https://grafana.internal/explore?left={"datasource":"loki","queries":[{"expr":"{app=\"checkout-api\",level=\"error\"}"}]}</code></pre>
+        <h3>The runbook is not optional</h3>
+        <p>An alert without a runbook is an alert that will be handled badly by someone who was not on the team
+ when it was written. Keep runbooks short and specific.</p>
+      <p class="code-label">runbooks/checkout/error-budget-burn.md</p>
+      <pre><code># Runbook: Checkout error budget burn
+
+## What this means
+The checkout API is failing more than 1.44% of requests over the last hour.
+
+## Immediate impact
+Customers cannot complete purchases. Assume revenue loss.
+
+## First three checks (in order)
+1. Recent deploy?  https://argocd.internal/applications/checkout-api
+   -&gt; If a deploy landed in the last 30 min, roll back FIRST, diagnose after.
+      `kubectl -n checkout rollout undo deployment/checkout-api`
+2. Dependency healthy?  https://grafana.internal/d/checkout-deps
+   -&gt; payments-api and inventory-api RED panels. If one is red, escalate to
+      that team and declare a SEV-2.
+3. Saturation?  https://grafana.internal/d/checkout-resources
+   -&gt; Check DB connection pool wait time and CPU throttling ratio.
+
+## If none of the above
+Declare a SEV-2 and page the checkout on-call secondary.
+Escalation: #checkout-oncall, then @checkout-lead.
+
+## Known false positives
+None. This alert requires 2 minutes of sustained 14.4x burn.</code></pre>
+      </section>
+      <section>
+        <h2>Routing, grouping, and inhibition</h2>
+        <p>Alertmanager's job is to turn a storm of firing rules into a small number of useful notifications.
+ Three mechanisms do the work: grouping combines related alerts into one notification, inhibition suppresses
+ alerts that are consequences of a bigger one, and routing sends each to the right destination.</p>
+      <p class="code-label">alertmanager.yml</p>
+      <pre><code>route:
+  # Group alerts that share these labels into a single notification
+  group_by: [alertname, cluster, service]
+  group_wait: 30s            # wait for siblings before the first send
+  group_interval: 5m         # wait before sending updates to a group
+  repeat_interval: 4h        # re-notify about a still-firing group
+  receiver: default-slack
+
+  routes:
+    # Pages go to the paging provider, routed by team
+    - matchers: [severity = "page"]
+      receiver: pagerduty
+      group_wait: 10s        # pages should be fast
+      routes:
+        - matchers: [team = "checkout"]
+          receiver: pagerduty-checkout
+        - matchers: [team = "platform"]
+          receiver: pagerduty-platform
+
+    # Tickets go to a queue, batched generously
+    - matchers: [severity = "ticket"]
+      receiver: jira
+      group_wait: 5m
+      group_interval: 1h
+      repeat_interval: 24h
+
+    # Non-production never pages anyone, ever
+    - matchers: [environment =~ "dev|staging"]
+      receiver: slack-dev
+      continue: false
+
+inhibit_rules:
+  # If the whole cluster is down, do not also page about every service in it
+  - source_matchers: [alertname = "ClusterDown"]
+    target_matchers: [severity =~ "page|ticket"]
+    equal: [cluster]
+
+  # A firing page suppresses the equivalent ticket for the same service
+  - source_matchers: [severity = "page"]
+    target_matchers: [severity = "ticket"]
+    equal: [alertname, cluster, service]
+
+  # If a dependency is down, suppress its consumers' symptom alerts
+  - source_matchers: [alertname = "DatabaseDown"]
+    target_matchers: [alertname = "CheckoutErrorBudgetBurnFast"]
+    equal: [cluster]
+
+receivers:
+  - name: pagerduty-checkout
+    pagerduty_configs:
+      - service_key: ${PD_CHECKOUT_KEY}
+        description: "{{ .CommonAnnotations.summary }}"
+        details:
+          impact:   "{{ .CommonAnnotations.impact }}"
+          runbook:  "{{ .CommonAnnotations.runbook_url }}"
+          firing:   "{{ .Alerts.Firing | len }}"
+
+  - name: jira
+    webhook_configs:
+      - url: http://alert-to-jira:8080/webhook</code></pre>
+        <div class="callout">
+          <p>Inhibition rules are the highest-value and least-used part of Alertmanager. A single database failure that produces forty pages is not forty problems; it is one problem and thirty-nine pieces of noise arriving while someone is trying to concentrate.</p>
+        </div>
+      </section>
+      <section>
+        <h2>Dashboards structured for triage</h2>
+        <p>Most dashboards are built by someone exploring a problem and then never edited again. That produces a
+ wall of forty panels that is useless under pressure. Build for the sequence an engineer actually follows,
+ in layers.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th scope="col">Layer</th><th scope="col">Answers</th><th scope="col">Panels</th><th scope="col">Audience</th></tr></thead>
+            <tbody>
+            <tr><td>1. SLO overview</td><td>Are we meeting our commitments?</td><td>Budget remaining, current burn rate, 28-day attainment, active incidents</td><td>Everyone, including leadership</td></tr>
+            <tr><td>2. Service RED</td><td>Which service is unhealthy?</td><td>Rate, errors, duration per service &mdash; one templated dashboard for all</td><td>On-call, first 60 seconds</td></tr>
+            <tr><td>3. Service detail</td><td>What inside this service is wrong?</td><td>Per-route RED, dependency latency, saturation, recent deploys</td><td>Service owner, minutes 1&ndash;10</td></tr>
+            <tr><td>4. Resource / USE</td><td>Which resource is the bottleneck?</td><td>CPU, memory, disk, network, pools, throttling &mdash; utilisation and saturation</td><td>Deep debugging</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul>
+          <li><strong>Put the answer at the top left.</strong> Eyes land there first. It should be the single number that says whether there is a problem.</li>
+          <li><strong>Use consistent time ranges and units</strong> across panels, or people will misread two graphs as correlated when they are not.</li>
+          <li><strong>Annotate deploys.</strong> A vertical line at each deploy answers the first triage question without leaving the dashboard.</li>
+          <li><strong>Add a text panel with links</strong> to the runbook, the repo, the on-call rotation, and the next dashboard down.</li>
+          <li><strong>Enable exemplars on latency panels.</strong> One click from a spike to a trace is the highest-leverage feature in the entire stack.</li>
+          <li><strong>Delete dashboards nobody opens.</strong> Grafana usage insights or the API will tell you which. A stale dashboard is worse than none, because someone will trust it.</li>
+        </ul>
+      <p class="code-label">Deploy annotations and templating</p>
+      <pre><code>{
+  "annotations": {
+    "list": [
+      {
+        "name": "Deploys",
+        "datasource": { "type": "prometheus", "uid": "mimir" },
+        "enable": true,
+        "expr": "changes(kube_deployment_status_observed_generation{deployment=\"$service\"}[5m]) &gt; 0",
+        "iconColor": "rgba(255, 96, 96, 1)",
+        "titleFormat": "Deploy: {{deployment}}"
+      }
+    ]
+  },
+  "templating": {
+    "list": [
+      { "name": "env",     "type": "query", "query": "label_values(up, environment)" },
+      { "name": "service", "type": "query", "query": "label_values(up{environment=\"$env\"}, job)" }
+    ]
+  }
+}</code></pre>
+      </section>
+      <section>
+        <h2>Keeping the alert set honest</h2>
+        <p>Alert rules rot. Services get renamed, thresholds stop matching reality, and rules accumulate for
+ failure modes that were fixed two years ago. Two habits keep the set trustworthy.</p>
+        <h3>Test your rules</h3>
+      <p class="code-label">promtool rule unit tests</p>
+      <pre><code># rules_test.yml - run with: promtool test rules rules_test.yml
+rule_files:
+  - slo-burn-alerts.yml
+
+evaluation_interval: 1m
+
+tests:
+  - interval: 1m
+    input_series:
+      - series: 'sli:checkout_bad:ratio1h'
+        values: '0+0x30 0.02+0x40'     # healthy 30m, then 2% bad
+      - series: 'sli:checkout_bad:ratio5m'
+        values: '0+0x30 0.02+0x40'
+
+    alert_rule_test:
+      # Should be quiet while healthy
+      - eval_time: 20m
+        alertname: CheckoutErrorBudgetBurnFast
+        exp_alerts: []
+
+      # Should fire after the burn starts plus the "for" duration
+      - eval_time: 35m
+        alertname: CheckoutErrorBudgetBurnFast
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              slo: checkout-availability
+              long_window: 1h
+            exp_annotations:
+              summary: "Checkout is burning error budget at 14.4x (2% consumed in 1h)"</code></pre>
+        <h3>Review what actually fired</h3>
+      <p class="code-label">Alert review queries</p>
+      <pre><code># Which alerts fired most in the last 30 days?
+sort_desc(
+  count by (alertname) (
+    count_over_time(ALERTS{alertstate="firing"}[30d])
+  )
+)
+
+# Which alerts have never fired? Candidates for deletion or for
+# being quietly broken - both are worth knowing about.
+count by (alertname) (
+  count_over_time(ALERTS[90d])
+) == 0
+
+# Pages per week per team - the on-call health metric
+sum by (team) (
+  count_over_time(ALERTS{alertstate="firing", severity="page"}[7d])
+)</code></pre>
+        <p>Run this monthly with the on-call rotation in the room. For each of the top five alerts, ask one
+ question: did a human do something useful in response? If the answer is no more than half the time, fix
+ the rule or delete it.</p>
+        <div class="callout lab">
+          <p>Hands-on: <code>labs/11-alerting</code> in the <a href="https://github.com/ramchandra-guthula/sre-training-labs" target="_blank" rel="noreferrer">companion repo</a> includes the full Alertmanager configuration above, promtool tests for every rule in the series, and a four-layer provisioned dashboard set.</p>
+        </div>
+      </section>
+      <section class="key-takeaways">
+        <h2>Key takeaways</h2>
+        <ul>
+          <li>A page must be user-affecting, urgent, actionable and novel. Anything failing one of those is a ticket or automation work.</li>
+          <li>Page on symptoms. The only cause-based exceptions are imminent hard failures and total loss of signal.</li>
+          <li>Every alert needs a summary, an impact statement, a runbook link and a dashboard link.</li>
+          <li>Use grouping, inhibition and routing so one failure produces one notification, not forty.</li>
+          <li>Structure dashboards in layers: SLO overview, service RED, service detail, resources.</li>
+          <li>Annotate deploys on every dashboard. It answers the first triage question for free.</li>
+          <li>Unit-test alert rules with promtool, and review what actually fired every month.</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Quick answers</h2>
+        <details class="faq-item">
+          <summary>How many pages per week is acceptable?</summary>
+          <p>Fewer than two actionable pages per on-call shift is a healthy target, and zero non-actionable pages. Above that, engineers stop reading alerts carefully, which costs you far more than the noise itself. Treat page volume as a system health metric and review it monthly.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Should I alert on CPU or memory at all?</summary>
+          <p>As tickets for capacity planning, yes. As pages, almost never - high utilisation with healthy latency and errors is a machine doing its job. The exception is a resource that fails hard and unrecoverably when exhausted, such as disk space, where predicting exhaustion is worth waking someone.</p>
+        </details>
+        <details class="faq-item">
+          <summary>What is the difference between grouping and inhibition?</summary>
+          <p>Grouping combines multiple firing alerts that share labels into a single notification, so ten failing pods become one message. Inhibition suppresses alerts entirely when a more significant related alert is already firing, so a cluster-wide outage does not also page you about every service inside it.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How do I stop alert fatigue once it has set in?</summary>
+          <p>Start from data, not opinion. Pull the alerts that fired most over the last 90 days, and for each ask whether a human took useful action. Delete or downgrade everything that fails that test - typically half the rule set. Then add runbook links to what survives, and set a rule that no new page ships without one.</p>
+        </details>
+      </section>
+    </article>
+
+    <nav class="series-nav" data-series-nav aria-label="Series navigation"></nav>
+
+    <aside class="article-footer-card">
+      <h2>Continue reading</h2>
+      <div class="mini-link-list" data-related-articles></div>
+    </aside>
+  </main>
+
+  <script src="../assets/js/site-data.js"></script>
+  <script src="../assets/js/script.js"></script>
+</body>
+</html>

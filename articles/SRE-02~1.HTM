@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SLI, SLO, and SLA Explained: Choosing Indicators That Reflect Real User Pain | Ram Guthula</title>
+  <meta name="description" content="How to define SLIs, SLOs, and SLAs correctly: the good-events over valid-events pattern, latency and availability SLIs, target selection, and rolling windows.">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#0b1220">
+  <link rel="canonical" href="https://www.ramguthula.com/articles/sre-02-sli-slo-sla.html">
+  <link rel="alternate" type="application/rss+xml" title="Ram Guthula Feed" href="https://www.ramguthula.com/feed.xml">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="SLI, SLO, and SLA Explained: Choosing Indicators That Reflect Real User Pain">
+  <meta property="og:description" content="How to define SLIs, SLOs, and SLAs correctly: the good-events over valid-events pattern, latency and availability SLIs, target selection, and rolling windows.">
+  <meta property="og:url" content="https://www.ramguthula.com/articles/sre-02-sli-slo-sla.html">
+  <meta property="og:image" content="https://www.ramguthula.com/github-header-image.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SLI, SLO, and SLA Explained: Choosing Indicators That Reflect Real User Pain">
+  <meta name="twitter:description" content="How to define SLIs, SLOs, and SLAs correctly: the good-events over valid-events pattern, latency and availability SLIs, target selection, and rolling windows.">
+  <meta name="twitter:image" content="https://www.ramguthula.com/github-header-image.png">
+
+  <link rel="shortcut icon" href="../assets/images/logo.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/style.css">
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "SLI, SLO, and SLA Explained: Choosing Indicators That Reflect Real User Pain",
+      "description": "How to define SLIs, SLOs, and SLAs correctly: the good-events over valid-events pattern, latency and availability SLIs, target selection, and rolling windows.",
+      "author": { "@type": "Person", "name": "Ram Guthula" },
+      "publisher": { "@type": "Person", "name": "Ram Guthula" },
+      "mainEntityOfPage": "https://www.ramguthula.com/articles/sre-02-sli-slo-sla.html",
+      "datePublished": "2026-07-27",
+      "dateModified": "2026-07-27",
+      "isPartOf": {
+        "@type": "Series",
+        "name": "SRE Training Series",
+        "url": "https://www.ramguthula.com/articles/sre-training-series.html"
+      },
+      "position": 2
+    }
+  </script>
+</head>
+<body data-article-slug="sre-02-sli-slo-sla" data-series="sre" data-series-part="2">
+  <div class="page-shell"></div>
+
+  <main class="article-layout">
+    <header class="article-header-shell">
+      <a class="back-link" href="./sre-training-series.html">Back to the SRE series</a>
+      <p class="section-kicker">Part 2 - Foundations</p>
+      <h1>SLI, SLO, SLA: the reliability contract</h1>
+      <p class="article-standfirst">Most reliability programs stall because the first SLO is written about a machine instead of a user. This part shows how to pick indicators that move when customers hurt.</p>
+      <div class="article-meta">
+        <span>By Ram Guthula</span>
+        <span>July 27, 2026</span>
+        <span>11 min read</span>
+      </div>
+      <div class="series-progress" data-series-progress></div>
+    </header>
+
+    <article class="article-body">
+      <section>
+        <h2>Three words that get used interchangeably and should not be</h2>
+        <p>Almost every reliability programme starts with someone confidently misusing these three terms in a
+ planning meeting. They form a chain: the indicator is the measurement, the objective is the internal
+ target for that measurement, and the agreement is the external promise about it.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th scope="col">Term</th><th scope="col">What it is</th><th scope="col">Audience</th><th scope="col">Consequence of missing it</th></tr></thead>
+            <tbody>
+            <tr><td>SLI &mdash; Service Level Indicator</td><td>A quantitative measure of one aspect of service quality, expressed as a ratio</td><td>Engineers</td><td>None &mdash; it is just a number</td></tr>
+            <tr><td>SLO &mdash; Service Level Objective</td><td>A target value for an SLI over a defined window</td><td>Engineering and product</td><td>Error budget policy kicks in; feature work pauses</td></tr>
+            <tr><td>SLA &mdash; Service Level Agreement</td><td>A contractual commitment, usually with financial remedy</td><td>Customers, legal, sales</td><td>Service credits, refunds, contractual breach</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout">
+          <p>Set your SLO meaningfully stricter than your SLA. If you promise customers 99.9% and target 99.9% internally, you breach the contract the moment you miss your own target. A common ratio is an SLO one nine tighter, or at minimum a target that leaves a comfortable margin.</p>
+        </div>
+      </section>
+      <section>
+        <h2>What makes an SLI good</h2>
+        <p>An SLI should answer one question: <em>is the service doing its job for the user right now?</em> That
+ rules out most of what a typical monitoring system collects. CPU utilisation is not an SLI. Neither is pod
+ count, queue depth, or JVM heap. Those are causes. An SLI measures the effect the user experiences.</p>
+        <p>The strongest formulation, and the one used by nearly every mature implementation, is a ratio of good
+ events to valid events:</p>
+      <p class="code-label">The pattern</p>
+      <pre><code>SLI = good events / valid events
+
+# Availability:  successful requests / all requests that reached us
+# Latency:       requests served faster than 300ms / all requests
+# Freshness:     records processed within 5 min of arrival / all records
+# Correctness:   records with the right output / all records processed
+# Coverage:      rows successfully ingested / rows submitted</code></pre>
+        <p>Framing every SLI this way pays off later: it makes the error budget trivially computable, it makes
+ latency and availability comparable, and it makes burn-rate alerting a single reusable rule template
+ instead of a bespoke query per service.</p>
+      </section>
+      <section>
+        <h2>Decide what counts as 'valid' before you decide what counts as 'good'</h2>
+        <p>This is where most first attempts go wrong, and the resulting SLO is either impossible to hit or
+ impossible to miss. You must be explicit about the denominator.</p>
+        <ul>
+          <li><strong>Are 4xx responses failures?</strong> Usually not. A 400 means the client sent something invalid; that is the client's bug, and counting it against you means a single broken integration can burn your budget. But a 429 from your own overload protection is arguably yours, and a 404 on a resource that should exist certainly is.</li>
+          <li><strong>Are health check and probe requests included?</strong> They should not be. They are high-volume and always succeed, so they dilute the ratio and hide real failures.</li>
+          <li><strong>Are requests during planned maintenance included?</strong> Decide once, write it down, and implement it consistently.</li>
+          <li><strong>Are bot and scanner requests included?</strong> If a scanner hits 10,000 nonexistent paths, your error rate should not move.</li>
+          <li><strong>Is a request that times out at the client but succeeds at the server good or bad?</strong> It is bad. This is the argument for measuring as close to the user as you can.</li>
+        </ul>
+        <div class="callout warn">
+          <p>Write the definition down in prose, in the same document as the SLO, before you write any PromQL. 'Valid requests are all HTTP requests to routes under /api excluding /healthz and /metrics; good requests are those returning a status code below 500 within 300 milliseconds.' If you cannot write that sentence, you are not ready to write the query.</p>
+        </div>
+      </section>
+      <section>
+        <h2>Where you measure changes what you measure</h2>
+        <p>The same nominal SLI produces very different numbers depending on the observation point.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th scope="col">Measurement point</th><th scope="col">Catches</th><th scope="col">Misses</th><th scope="col">Notes</th></tr></thead>
+            <tbody>
+            <tr><td>Application code</td><td>Handler errors, business logic failures</td><td>Everything before the app: LB, DNS, TLS, network, cold starts</td><td>Cheapest to add, most misleading on its own</td></tr>
+            <tr><td>Load balancer / ingress / service mesh</td><td>App errors plus most connection failures and upstream timeouts</td><td>DNS, client network, CDN, TLS handshake failures at the edge</td><td>Best default for most teams; one consistent source across services</td></tr>
+            <tr><td>CDN or edge logs</td><td>Nearly everything server-side including TLS and edge errors</td><td>Client device and network conditions</td><td>Good for public web traffic</td></tr>
+            <tr><td>Real user monitoring (client)</td><td>Actual user experience end to end</td><td>Requests from users who never loaded your JS at all</td><td>Truest signal, noisiest data, hardest to keep clean</td></tr>
+            <tr><td>Synthetic probes</td><td>Total outages, from multiple regions, at known intervals</td><td>Anything affecting only a subset of real users or a specific code path</td><td>Excellent complement, poor primary SLI &mdash; low sample rate</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>For most teams the pragmatic answer is: measure at the ingress or service mesh as the system of
+ record, and keep client-side RUM alongside it as a reality check. When the two disagree badly, the gap
+ itself is the finding.</p>
+      </section>
+      <section>
+        <h2>Writing the objective: target, window, and window type</h2>
+        <p>An SLO needs three components. Missing any one of them makes it unenforceable.</p>
+        <h3>The target</h3>
+        <p>Start from measured reality, not aspiration. Pull four weeks of history, compute what the SLI actually
+ was, and set the target slightly above the current typical performance. If you have been running at
+ 99.5%, a 99.9% target is a project, not an objective. Set 99.5%, hold it, then tighten it deliberately.</p>
+        <h3>The window</h3>
+        <p>Twenty-eight or thirty days is the standard for the headline SLO. Shorter windows are twitchy and
+ punish single incidents disproportionately. Longer windows hide sustained degradation for too long. Use a
+ short window in addition, not instead, when you need faster feedback.</p>
+        <h3>Rolling or calendar</h3>
+        <p>A rolling window looks at the trailing 30 days continuously and is what you should alert on. A
+ calendar window resets on the first of the month and is what finance and customers understand. Most teams
+ report on calendar and alert on rolling. Just be clear which one a given number refers to.</p>
+      <p class="code-label">SLO definition template</p>
+      <pre><code>Service:        checkout-api
+SLI:            proportion of valid requests served successfully
+Valid events:   all HTTP requests to /api/v1/checkout/* excluding /healthz
+Good events:    HTTP status &lt; 500 AND served in &lt; 400ms
+Measured at:    ingress-nginx access logs
+SLO:            99.5% of valid requests are good, over a rolling 28 days
+Error budget:   0.5% = ~3h 21m of total failure, or 5 in every 1,000 requests
+Policy:         see error-budget-policy.md
+Owner:          checkout team
+Reviewed:       quarterly</code></pre>
+      </section>
+      <section>
+        <h2>Implementing it in Prometheus</h2>
+        <p>The mechanics are straightforward once the definition is fixed. The important habit is to build the
+ SLI as a recording rule rather than computing it ad hoc in dashboards, so that every dashboard, alert, and
+ report uses exactly the same arithmetic.</p>
+      <p class="code-label">prometheus/rules/slo-checkout.yml</p>
+      <pre><code>groups:
+  - name: slo-checkout-api
+    interval: 30s
+    rules:
+      # Denominator: all valid requests
+      - record: sli:checkout_requests:rate5m
+        expr: |
+          sum(rate(http_request_duration_seconds_count{
+            job="checkout-api", route!="/healthz"
+          }[5m]))
+
+      # Numerator: fast AND not a server error.
+      # Note the subtraction: bucket counts include errors, so remove them.
+      - record: sli:checkout_requests_good:rate5m
+        expr: |
+          sum(rate(http_request_duration_seconds_bucket{
+            job="checkout-api", route!="/healthz", le="0.4"
+          }[5m]))
+          -
+          sum(rate(http_request_duration_seconds_count{
+            job="checkout-api", route!="/healthz", code=~"5.."
+          }[5m]))
+
+      # The SLI itself
+      - record: sli:checkout_availability:ratio5m
+        expr: |
+          sli:checkout_requests_good:rate5m
+          /
+          sli:checkout_requests:rate5m</code></pre>
+        <p>To report attainment over the full window, aggregate the same numerator and denominator across 28
+ days rather than averaging the ratio. Averaging ratios weights quiet nights equally with peak traffic and
+ will flatter you:</p>
+      <p class="code-label">28-day attainment</p>
+      <pre><code># CORRECT - ratio of the sums, traffic-weighted
+sum_over_time(sli:checkout_requests_good:rate5m[28d])
+/
+sum_over_time(sli:checkout_requests:rate5m[28d])
+
+# WRONG - mean of the ratios, weights a 3am hour the same as noon
+avg_over_time(sli:checkout_availability:ratio5m[28d])</code></pre>
+      </section>
+      <section>
+        <h2>The mistakes that show up in almost every first attempt</h2>
+        <ul>
+          <li><strong>Too many SLOs.</strong> Two or three per user-facing service. If everything has an SLO, nothing does, and nobody can tell you which one is on fire.</li>
+          <li><strong>SLOs on internal components nobody uses directly.</strong> A cache hit-rate SLO is a performance metric wearing a costume. Reserve SLOs for things with consumers.</li>
+          <li><strong>Targets set by aspiration.</strong> Picking 99.99% because it sounds serious guarantees a permanently exhausted budget, which trains everyone to ignore it.</li>
+          <li><strong>Averaging away the pain.</strong> A single global SLO can look healthy while one region, one tenant, or one endpoint is completely broken. Consider per-tier or per-region SLOs for anything with meaningfully different traffic.</li>
+          <li><strong>No owner and no review.</strong> An SLO with no named owner drifts out of date within two quarters and quietly stops being trusted.</li>
+          <li><strong>Alerting directly on the SLO threshold.</strong> 'Page when availability drops below 99.9%' fires constantly during low traffic and misses slow burns. Part 3 fixes this properly.</li>
+        </ul>
+        <div class="callout lab">
+          <p>Hands-on: the companion repository includes a demo service that emits realistic request metrics, plus the recording rules above, so you can compute a real SLI locally. See <code>labs/02-sli-slo</code> in the <a href="https://github.com/ramchandra-guthula/sre-training-labs" target="_blank" rel="noreferrer">sre-training-labs repo</a>.</p>
+        </div>
+      </section>
+      <section class="key-takeaways">
+        <h2>Key takeaways</h2>
+        <ul>
+          <li>SLI is the measurement, SLO is the internal target, SLA is the external promise. Keep meaningful headroom between the last two.</li>
+          <li>Express every SLI as good events divided by valid events. It makes error budgets and burn-rate alerting fall out for free.</li>
+          <li>Define the denominator explicitly - health checks, 4xx responses, bots and maintenance windows all need a documented decision.</li>
+          <li>Where you measure changes what you measure. The ingress or service mesh is the pragmatic default; keep client-side RUM as a reality check.</li>
+          <li>Set the first target from four weeks of measured history, not from aspiration.</li>
+          <li>Build SLIs as recording rules so every dashboard, alert and report uses identical arithmetic.</li>
+          <li>Compute long-window attainment as a ratio of sums, never as an average of ratios.</li>
+          <li>Two or three SLOs per user-facing service, each with a named owner and a review date.</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Quick answers</h2>
+        <details class="faq-item">
+          <summary>Should 4xx errors count against my availability SLO?</summary>
+          <p>Generally no, because they indicate a client-side problem you did not cause. The important exceptions are 429 responses generated by your own rate limiting or overload protection, and 404s on resources that genuinely should exist. Decide explicitly and document the decision, because the choice materially changes the number.</p>
+        </details>
+        <details class="faq-item">
+          <summary>What is a reasonable first SLO target?</summary>
+          <p>Whatever your service already achieves, rounded down. Measure four weeks of history first. Setting a target you are currently missing means starting with an exhausted error budget, and a budget that is always exhausted gets ignored within a month.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How many SLOs should one service have?</summary>
+          <p>Two or three. Availability and latency cover most request-response services. Data pipelines usually need freshness and correctness instead. More than four and on-call cannot hold them in their head during an incident.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Can I have an SLO without an SLA?</summary>
+          <p>Yes, and most internal services should. SLOs are engineering controls and exist whether or not anything is contractually promised. The reverse is dangerous: an SLA with no internal SLO means you find out about breaches from your customer.</p>
+        </details>
+      </section>
+    </article>
+
+    <nav class="series-nav" data-series-nav aria-label="Series navigation"></nav>
+
+    <aside class="article-footer-card">
+      <h2>Continue reading</h2>
+      <div class="mini-link-list" data-related-articles></div>
+    </aside>
+  </main>
+
+  <script src="../assets/js/site-data.js"></script>
+  <script src="../assets/js/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Distributed Tracing with OpenTelemetry and Tempo | Ram Guthula</title>
+  <meta name="description" content="A practical OpenTelemetry and Grafana Tempo guide: spans, context propagation, semantic conventions, head vs tail sampling, span metrics, and exemplar-driven correlation.">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#0b1220">
+  <link rel="canonical" href="https://www.ramguthula.com/articles/sre-09-tracing-otel-tempo.html">
+  <link rel="alternate" type="application/rss+xml" title="Ram Guthula Feed" href="https://www.ramguthula.com/feed.xml">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Distributed Tracing with OpenTelemetry and Tempo">
+  <meta property="og:description" content="A practical OpenTelemetry and Grafana Tempo guide: spans, context propagation, semantic conventions, head vs tail sampling, span metrics, and exemplar-driven correlation.">
+  <meta property="og:url" content="https://www.ramguthula.com/articles/sre-09-tracing-otel-tempo.html">
+  <meta property="og:image" content="https://www.ramguthula.com/github-header-image.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Distributed Tracing with OpenTelemetry and Tempo">
+  <meta name="twitter:description" content="A practical OpenTelemetry and Grafana Tempo guide: spans, context propagation, semantic conventions, head vs tail sampling, span metrics, and exemplar-driven correlation.">
+  <meta name="twitter:image" content="https://www.ramguthula.com/github-header-image.png">
+
+  <link rel="shortcut icon" href="../assets/images/logo.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/style.css">
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Distributed Tracing with OpenTelemetry and Tempo",
+      "description": "A practical OpenTelemetry and Grafana Tempo guide: spans, context propagation, semantic conventions, head vs tail sampling, span metrics, and exemplar-driven correlation.",
+      "author": { "@type": "Person", "name": "Ram Guthula" },
+      "publisher": { "@type": "Person", "name": "Ram Guthula" },
+      "mainEntityOfPage": "https://www.ramguthula.com/articles/sre-09-tracing-otel-tempo.html",
+      "datePublished": "2026-07-27",
+      "dateModified": "2026-07-27",
+      "isPartOf": {
+        "@type": "Series",
+        "name": "SRE Training Series",
+        "url": "https://www.ramguthula.com/articles/sre-training-series.html"
+      },
+      "position": 9
+    }
+  </script>
+</head>
+<body data-article-slug="sre-09-tracing-otel-tempo" data-series="sre" data-series-part="9">
+  <div class="page-shell"></div>
+
+  <main class="article-layout">
+    <header class="article-header-shell">
+      <a class="back-link" href="./sre-training-series.html">Back to the SRE series</a>
+      <p class="section-kicker">Part 9 - Signals</p>
+      <h1>Distributed tracing that answers 'where did the time go'</h1>
+      <p class="article-standfirst">Metrics tell you the p99 got worse. Traces tell you which of the eleven downstream calls did it. This part covers spans, context propagation, and the sampling decision.</p>
+      <div class="article-meta">
+        <span>By Ram Guthula</span>
+        <span>July 27, 2026</span>
+        <span>12 min read</span>
+      </div>
+      <div class="series-progress" data-series-progress></div>
+    </header>
+
+    <article class="article-body">
+      <section>
+        <h2>The question metrics cannot answer</h2>
+        <p>Your p99 checkout latency went from 300ms to 2.4s. Metrics tell you that, and they tell you which
+ service's own latency rose. What they cannot tell you is the shape of a single slow request: that it spent
+ 40ms in the API gateway, 30ms in auth, then 2.1 seconds waiting on a connection to the inventory service
+ because a connection pool of 10 was serving 400 concurrent requests.</p>
+        <p>That is what tracing is for. A trace is the complete causal record of one request as it moves through
+ your system, assembled from spans emitted independently by each service.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th scope="col">Concept</th><th scope="col">Meaning</th></tr></thead>
+            <tbody>
+            <tr><td>Trace</td><td>One request end to end, identified by a 16-byte trace ID</td></tr>
+            <tr><td>Span</td><td>One unit of work within the trace: an HTTP handler, a DB query, a queue publish</td></tr>
+            <tr><td>Parent span ID</td><td>The span that caused this one, which is what builds the tree</td></tr>
+            <tr><td>Span context</td><td>trace ID + span ID + flags, propagated across process boundaries in headers</td></tr>
+            <tr><td>Attributes</td><td>Key-value pairs on a span. High cardinality is fine and expected here</td></tr>
+            <tr><td>Events</td><td>Timestamped points within a span &mdash; an exception, a retry, a cache miss</td></tr>
+            <tr><td>Links</td><td>References to other traces &mdash; how you connect a producer to a batched consumer</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section>
+        <h2>OpenTelemetry is the part worth committing to</h2>
+        <p>Vendor-specific tracing agents were a lock-in trap for a decade. OpenTelemetry is the CNCF standard
+ that ends it: one set of APIs and SDKs, one wire protocol (OTLP), and a collector that can fan out to any
+ backend. Instrument once, change backends by editing a config file.</p>
+      <p class="code-label">Tracer provider setup</p>
+      <pre><code>// Go: minimal but complete OTel setup
+package main
+
+import (
+    "context"
+    "go.opentelemetry.io/otel"
+    "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+    "go.opentelemetry.io/otel/propagation"
+    "go.opentelemetry.io/otel/sdk/resource"
+    sdktrace "go.opentelemetry.io/otel/sdk/trace"
+    semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+)
+
+func initTracing(ctx context.Context) (func(context.Context) error, error) {
+    exporter, err := otlptracegrpc.New(ctx,
+        otlptracegrpc.WithEndpoint("alloy:4317"),
+        otlptracegrpc.WithInsecure(),
+    )
+    if err != nil {
+        return nil, err
+    }
+
+    // Resource attributes identify the SERVICE and are attached to
+    // every span. service.name is mandatory - without it your spans
+    // land in a bucket called "unknown_service".
+    res, err := resource.New(ctx,
+        resource.WithAttributes(
+            semconv.ServiceName("checkout-api"),
+            semconv.ServiceVersion(buildVersion),
+            semconv.DeploymentEnvironment("production"),
+        ),
+        resource.WithHost(),
+        resource.WithProcessRuntimeDescription(),
+    )
+    if err != nil {
+        return nil, err
+    }
+
+    tp := sdktrace.NewTracerProvider(
+        sdktrace.WithBatcher(exporter),
+        sdktrace.WithResource(res),
+        // Head sampling decision - see the sampling section below
+        sdktrace.WithSampler(
+            sdktrace.ParentBased(sdktrace.TraceIDRatioBased(0.1)),
+        ),
+    )
+    otel.SetTracerProvider(tp)
+
+    // Without this, context does not cross process boundaries and
+    // you get thousands of one-span traces instead of one real trace.
+    otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
+        propagation.TraceContext{},
+        propagation.Baggage{},
+    ))
+
+    return tp.Shutdown, nil
+}</code></pre>
+        <div class="callout warn">
+          <p>Setting the propagator is the step people forget. Without it each service starts a fresh trace, and you get a flood of single-span traces that look like tracing is working while telling you nothing.</p>
+        </div>
+      </section>
+      <section>
+        <h2>Instrumenting: auto first, manual where it matters</h2>
+        <p>Auto-instrumentation libraries cover HTTP servers and clients, gRPC, SQL drivers, and most message
+ brokers. Start there &mdash; it gets you the service map and the call-graph latency breakdown for almost
+ no effort. Add manual spans only around business logic that auto-instrumentation cannot see.</p>
+      <p class="code-label">Auto plus manual</p>
+      <pre><code>// Auto-instrumentation covers the transport layer
+import (
+    "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+)
+
+handler := otelhttp.NewHandler(mux, "checkout-api")
+client := &amp;http.Client{Transport: otelhttp.NewTransport(http.DefaultTransport)}
+
+// Manual spans for the interesting internal work
+func (s *Service) ApplyPromotion(ctx context.Context, order *Order) error {
+    ctx, span := s.tracer.Start(ctx, "ApplyPromotion",
+        trace.WithAttributes(
+            // High cardinality is FINE here - this is the whole point
+            attribute.String("order.id", order.ID),
+            attribute.String("user.id", order.UserID),
+            attribute.String("promo.code", order.PromoCode),
+            attribute.Int("order.item_count", len(order.Items)),
+            attribute.Float64("order.total", order.Total),
+        ))
+    defer span.End()
+
+    rules, err := s.rules.Load(ctx, order.PromoCode)
+    if err != nil {
+        span.RecordError(err)
+        span.SetStatus(codes.Error, "failed to load promotion rules")
+        return err
+    }
+
+    span.AddEvent("rules loaded", trace.WithAttributes(
+        attribute.Int("rules.count", len(rules)),
+    ))
+
+    // ctx carries the span - passing it downstream is what builds the tree
+    return s.apply(ctx, order, rules)
+}</code></pre>
+        <div class="callout">
+          <p>Attributes on spans are cheap in exactly the way metric labels are expensive. Order IDs, user IDs, SQL statements, cache keys, feature flag values &mdash; all of it belongs here. This is where the high-cardinality data you were told to keep out of metrics in Part 7 actually goes.</p>
+        </div>
+        <h3>Follow the semantic conventions</h3>
+        <p>OpenTelemetry defines standard attribute names: <code>http.request.method</code>,
+ <code>server.address</code>, <code>db.system</code>, <code>messaging.destination.name</code>. Using them
+ rather than inventing your own is what makes generic dashboards, automatic service maps, and vendor
+ tooling work without per-service configuration.</p>
+      </section>
+      <section>
+        <h2>Sampling: the decision that determines your bill</h2>
+        <p>Tracing every request at scale is usually unaffordable and rarely useful, because 99% of traces
+ describe requests that worked fine. Sampling is unavoidable; the question is when the decision is
+ made.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th scope="col">Approach</th><th scope="col">When decided</th><th scope="col">Pros</th><th scope="col">Cons</th></tr></thead>
+            <tbody>
+            <tr><td>Head sampling</td><td>At the root, before the request runs</td><td>Trivial, cheap, no buffering, consistent across services</td><td>Decides before knowing if the request was interesting; drops most errors and slow requests</td></tr>
+            <tr><td>Tail sampling</td><td>After the trace completes, in the collector</td><td>Keeps all errors and slow traces; sample only the boring ones</td><td>Collector must buffer whole traces; needs memory and careful routing</td></tr>
+            <tr><td>Probabilistic + rules</td><td>Head, with overrides</td><td>Cheap with a safety valve for known-important paths</td><td>Still blind to unexpected failures</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>The configuration most teams settle on is a low head-sampling rate combined with tail sampling in the
+ collector that keeps 100% of errors and slow traces plus a small random sample of successes.</p>
+      <p class="code-label">otel-collector-config.yaml</p>
+      <pre><code># OpenTelemetry Collector - tail sampling
+processors:
+  tail_sampling:
+    decision_wait: 10s        # how long to buffer a trace before deciding
+    num_traces: 100000        # in-memory trace buffer
+    expected_new_traces_per_sec: 2000
+    policies:
+      # Always keep anything that failed
+      - name: errors
+        type: status_code
+        status_code:
+          status_codes: [ERROR]
+
+      # Always keep anything slow
+      - name: slow
+        type: latency
+        latency:
+          threshold_ms: 1000
+
+      # Always keep traces for a service under investigation
+      - name: under-investigation
+        type: string_attribute
+        string_attribute:
+          key: service.name
+          values: [checkout-api, payments-api]
+
+      # Keep 1% of everything else, for baseline comparison
+      - name: baseline
+        type: probabilistic
+        probabilistic:
+          sampling_percentage: 1</code></pre>
+        <div class="callout warn">
+          <p>Tail sampling requires all spans of a trace to reach the same collector instance. With multiple collector replicas you need a two-tier setup: a load-balancing exporter that routes by trace ID into a second tier that does the sampling. Getting this wrong produces silently truncated traces.</p>
+        </div>
+      </section>
+      <section>
+        <h2>Span metrics: percentiles for free from your traces</h2>
+        <p>The collector's span metrics connector generates RED metrics from span data. You get consistent
+ request rate, error rate, and latency histograms for every instrumented service without touching
+ application code &mdash; especially valuable for services whose owners never got around to adding
+ Prometheus metrics.</p>
+      <p class="code-label">Span metrics connector</p>
+      <pre><code>connectors:
+  spanmetrics:
+    histogram:
+      explicit:
+        buckets: [5ms, 10ms, 25ms, 50ms, 100ms, 200ms, 400ms, 800ms, 1500ms, 3s, 5s, 10s]
+    dimensions:
+      # Keep these BOUNDED - these become Prometheus labels,
+      # and Part 7 applies in full force here.
+      - name: http.request.method
+      - name: http.response.status_code
+      - name: server.address
+    exemplars:
+      enabled: true          # links the histogram back to real traces
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [tail_sampling, batch]
+      exporters: [otlp/tempo, spanmetrics]
+    metrics/spanmetrics:
+      receivers: [spanmetrics]
+      exporters: [prometheusremotewrite]</code></pre>
+        <div class="callout warn">
+          <p>Do not put unbounded span attributes in <code>dimensions</code>. Span attributes are cheap; the Prometheus metrics generated from them are not. This connector is the most common way teams accidentally create a cardinality explosion after reading Part 7 and thinking they were safe.</p>
+        </div>
+      </section>
+      <section>
+        <h2>Storing traces in Tempo</h2>
+        <p>Tempo makes the same bet as Loki: no index beyond trace ID and a small set of searchable fields,
+ everything in object storage. Retrieval by trace ID is very cheap, which pairs perfectly with exemplars
+ and derived log fields &mdash; the two ways you will actually arrive at a trace in practice.</p>
+      <p class="code-label">tempo.yaml</p>
+      <pre><code>server:
+  http_listen_port: 3200
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+
+ingester:
+  max_block_duration: 5m
+
+compactor:
+  compaction:
+    block_retention: 336h        # 14 days
+
+metrics_generator:
+  registry:
+    external_labels:
+      source: tempo
+  storage:
+    path: /var/tempo/generator/wal
+    remote_write:
+      - url: http://mimir:9009/api/v1/push
+        send_exemplars: true
+  traces_storage:
+    path: /var/tempo/generator/traces
+  processor:
+    service_graphs:
+      dimensions: [http.method]
+    span_metrics:
+      dimensions: [http.method, http.status_code]
+
+storage:
+  trace:
+    backend: s3
+    s3:
+      endpoint: minio:9000
+      bucket: tempo
+      access_key: ${S3_ACCESS_KEY}
+      secret_key: ${S3_SECRET_KEY}
+      insecure: true
+    wal:
+      path: /var/tempo/wal
+
+overrides:
+  defaults:
+    metrics_generator:
+      processors: [service-graphs, span-metrics, local-blocks]</code></pre>
+        <p>Tempo's metrics generator produces service graphs directly from trace data, giving you an automatic,
+ always-current dependency map. That map is worth the setup cost on its own &mdash; it is invariably more
+ accurate than the architecture diagram in the wiki.</p>
+      </section>
+      <section>
+        <h2>TraceQL: querying traces</h2>
+      <p class="code-label">TraceQL</p>
+      <pre><code># All traces touching a service
+{ resource.service.name = "checkout-api" }
+
+# Slow traces only
+{ resource.service.name = "checkout-api" &amp;&amp; duration &gt; 2s }
+
+# Errors on a specific route
+{ resource.service.name = "checkout-api"
+  &amp;&amp; span.http.route = "/api/v1/checkout"
+  &amp;&amp; status = error }
+
+# Structural: traces where checkout called inventory AND that call was slow
+{ resource.service.name = "checkout-api" }
+  &gt;&gt; { resource.service.name = "inventory-api" &amp;&amp; duration &gt; 500ms }
+
+# Aggregate across matching spans
+{ resource.service.name = "checkout-api" } | avg(duration) &gt; 1s
+
+# Find a specific customer's failed orders - the high-cardinality
+# question that would be impossible as a metric
+{ span.order.id = "ord_8f3a91c2" }</code></pre>
+        <div class="callout lab">
+          <p>Hands-on: <code>labs/09-tracing</code> in the <a href="https://github.com/ramchandra-guthula/sre-training-labs" target="_blank" rel="noreferrer">companion repo</a> runs a four-service demo app with injectable latency and errors, full OTel instrumentation, tail sampling, span metrics, and exemplar links from Grafana panels straight into Tempo.</p>
+        </div>
+      </section>
+      <section class="key-takeaways">
+        <h2>Key takeaways</h2>
+        <ul>
+          <li>Metrics say something got slower; traces say where the time went.</li>
+          <li>Commit to OpenTelemetry. Instrument once, swap backends in config.</li>
+          <li>Set the propagator, or you get thousands of single-span traces that look like working tracing.</li>
+          <li>Auto-instrument the transport layer first; add manual spans around business logic.</li>
+          <li>Span attributes are the correct home for high-cardinality data. Use them freely.</li>
+          <li>Head sampling is cheap and blind. Tail sampling keeps every error and slow trace at the cost of collector memory.</li>
+          <li>The span metrics connector gives RED metrics for free - but its dimensions become Prometheus labels, so keep them bounded.</li>
+          <li>Tempo indexes almost nothing, which is fine because you arrive at traces via exemplars and log links, not search.</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Quick answers</h2>
+        <details class="faq-item">
+          <summary>What sampling rate should I start with?</summary>
+          <p>Start at 100% in development and on low-traffic services, since the volume is trivial and complete traces are worth far more while you are learning. In production, a common configuration is 1 to 10% head sampling plus tail sampling that retains 100% of errors and traces slower than your SLO threshold.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Why do my traces show only one service?</summary>
+          <p>Context is not propagating. Check that you set a text map propagator using W3C traceparent, that your HTTP clients are instrumented and not just your servers, and that no proxy or load balancer is stripping the traceparent header. Async boundaries such as queues need the context injected into the message explicitly.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Do I still need metrics if I have traces?</summary>
+          <p>Yes. Traces are sampled, expensive to retain, and unsuitable for alerting because you cannot compute a reliable rate from a sample. Metrics tell you something is wrong and are what you page on; traces tell you why. The span metrics connector narrows the instrumentation effort but does not remove the need for both.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Where should high-cardinality data live - spans or logs?</summary>
+          <p>Spans, when it describes the request being traced, because you get it in the context of the full call tree. Logs remain valuable for events outside a request scope such as startup, background jobs, and scheduled tasks. Include the trace ID in logs so the two link together.</p>
+        </details>
+      </section>
+    </article>
+
+    <nav class="series-nav" data-series-nav aria-label="Series navigation"></nav>
+
+    <aside class="article-footer-card">
+      <h2>Continue reading</h2>
+      <div class="mini-link-list" data-related-articles></div>
+    </aside>
+  </main>
+
+  <script src="../assets/js/site-data.js"></script>
+  <script src="../assets/js/script.js"></script>
+</body>
+</html>

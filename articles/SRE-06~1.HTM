@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Metrics Fundamentals: Counters, Gauges, Histograms, and PromQL That Works | Ram Guthula</title>
+  <meta name="description" content="Prometheus metric types explained: counters, gauges, histograms and summaries, plus rate, increase, irate, aggregation order, recording rules and common PromQL mistakes.">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#0b1220">
+  <link rel="canonical" href="https://www.ramguthula.com/articles/sre-06-metrics-and-promql.html">
+  <link rel="alternate" type="application/rss+xml" title="Ram Guthula Feed" href="https://www.ramguthula.com/feed.xml">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Metrics Fundamentals: Counters, Gauges, Histograms, and PromQL That Works">
+  <meta property="og:description" content="Prometheus metric types explained: counters, gauges, histograms and summaries, plus rate, increase, irate, aggregation order, recording rules and common PromQL mistakes.">
+  <meta property="og:url" content="https://www.ramguthula.com/articles/sre-06-metrics-and-promql.html">
+  <meta property="og:image" content="https://www.ramguthula.com/github-header-image.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Metrics Fundamentals: Counters, Gauges, Histograms, and PromQL That Works">
+  <meta name="twitter:description" content="Prometheus metric types explained: counters, gauges, histograms and summaries, plus rate, increase, irate, aggregation order, recording rules and common PromQL mistakes.">
+  <meta name="twitter:image" content="https://www.ramguthula.com/github-header-image.png">
+
+  <link rel="shortcut icon" href="../assets/images/logo.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/style.css">
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Metrics Fundamentals: Counters, Gauges, Histograms, and PromQL That Works",
+      "description": "Prometheus metric types explained: counters, gauges, histograms and summaries, plus rate, increase, irate, aggregation order, recording rules and common PromQL mistakes.",
+      "author": { "@type": "Person", "name": "Ram Guthula" },
+      "publisher": { "@type": "Person", "name": "Ram Guthula" },
+      "mainEntityOfPage": "https://www.ramguthula.com/articles/sre-06-metrics-and-promql.html",
+      "datePublished": "2026-07-27",
+      "dateModified": "2026-07-27",
+      "isPartOf": {
+        "@type": "Series",
+        "name": "SRE Training Series",
+        "url": "https://www.ramguthula.com/articles/sre-training-series.html"
+      },
+      "position": 6
+    }
+  </script>
+</head>
+<body data-article-slug="sre-06-metrics-and-promql" data-series="sre" data-series-part="6">
+  <div class="page-shell"></div>
+
+  <main class="article-layout">
+    <header class="article-header-shell">
+      <a class="back-link" href="./sre-training-series.html">Back to the SRE series</a>
+      <p class="section-kicker">Part 6 - Instrumentation</p>
+      <h1>Metrics fundamentals and PromQL</h1>
+      <p class="article-standfirst">Almost every wrong graph in production traces back to the same three mistakes: the wrong metric type, rate applied to the wrong thing, and aggregation done in the wrong order.</p>
+      <div class="article-meta">
+        <span>By Ram Guthula</span>
+        <span>July 27, 2026</span>
+        <span>12 min read</span>
+      </div>
+      <div class="series-progress" data-series-progress></div>
+    </header>
+
+    <article class="article-body">
+      <section>
+        <h2>Four metric types, and the consequences of choosing wrong</h2>
+        <p>Prometheus has a small type system, and nearly every misleading graph in production comes from
+ picking the wrong member of it.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th scope="col">Type</th><th scope="col">Semantics</th><th scope="col">Use for</th><th scope="col">Query with</th></tr></thead>
+            <tbody>
+            <tr><td>Counter</td><td>Monotonically increasing; resets to 0 on process restart</td><td>Requests served, bytes sent, errors, jobs completed</td><td><code>rate()</code>, <code>increase()</code> &mdash; never the raw value</td></tr>
+            <tr><td>Gauge</td><td>Arbitrary value that goes up and down</td><td>Queue depth, temperature, in-flight requests, memory in use</td><td>Raw value, <code>avg_over_time</code>, <code>delta()</code>, <code>deriv()</code></td></tr>
+            <tr><td>Histogram</td><td>Cumulative bucket counts plus sum and count</td><td>Latency, response size &mdash; anything you need percentiles of</td><td><code>histogram_quantile()</code> over <code>rate()</code> of buckets</td></tr>
+            <tr><td>Summary</td><td>Client-side quantiles plus sum and count</td><td>Single-instance quantiles where aggregation is not needed</td><td>Direct read &mdash; but it <em>cannot</em> be aggregated across instances</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout">
+          <p>Counters are named with a <code>_total</code> suffix by convention and must only ever increase. If you find yourself wanting to decrement a counter, you want a gauge. If you find yourself wanting a percentile from a gauge, you want a histogram.</p>
+        </div>
+        <h3>The counter reset problem, and why rate() exists</h3>
+        <p>A counter goes back to zero when the process restarts. Naively subtracting two samples would produce a
+ large negative number every deploy. <code>rate()</code> and <code>increase()</code> detect resets and
+ compensate, which is the entire reason you must never graph a counter's raw value.</p>
+      </section>
+      <section>
+        <h2>rate, irate, and increase</h2>
+      <p class="code-label">The three of them</p>
+      <pre><code># rate() - per-second average over the window, extrapolated to the
+# window edges, reset-aware. This is your default.
+rate(http_requests_total[5m])
+
+# increase() - the total change over the window.
+# Exactly equivalent to rate(x[5m]) * 300, with the same extrapolation.
+increase(http_requests_total[1h])
+
+# irate() - instantaneous rate from the last TWO samples only.
+# Very responsive, very noisy, and it will miss spikes entirely when
+# the graph resolution is coarser than the sample interval.
+# Use for high-resolution debugging graphs, never for alerts.
+irate(http_requests_total[5m])</code></pre>
+        <div class="callout warn">
+          <p>Rule of thumb for the window: at least four times your scrape interval. With a 15s scrape, <code>[1m]</code> is the practical minimum and <code>[5m]</code> is a safer default. Too short and a single missed scrape produces gaps; too long and you smooth away the incident you are trying to see.</p>
+        </div>
+        <h3>Extrapolation surprises</h3>
+        <p><code>rate()</code> and <code>increase()</code> extrapolate to the window boundaries, which means
+ <code>increase()</code> on a slow-moving counter can return non-integer values like 3.7 events. That is
+ expected behaviour, not a bug. If you need exact counts for billing or reporting, query the raw counter
+ difference rather than using <code>increase()</code>.</p>
+      </section>
+      <section>
+        <h2>Aggregation order is not optional</h2>
+        <p>This is the single most common PromQL error, and it produces answers that are wrong rather than
+ obviously broken.</p>
+      <p class="code-label">rate before sum</p>
+      <pre><code># WRONG - sums the raw counters, then rates the sum.
+# Every process restart in the fleet becomes a phantom negative spike,
+# and the reset correction cannot work because it has been applied
+# to an aggregate that is not a counter.
+rate(sum(http_requests_total)[5m:])
+
+# CORRECT - rate each series, then sum the rates.
+sum(rate(http_requests_total[5m]))
+
+# The rule: rate() FIRST, then sum(). Always.
+# Same for increase(), irate(), delta(), and deriv().</code></pre>
+      <p class="code-label">Ratio of sums, not average of ratios</p>
+      <pre><code># WRONG - averages ratios, weighting a 3am hour equally with noon
+avg(
+  rate(http_requests_total{code=~"5.."}[5m])
+  / rate(http_requests_total[5m])
+)
+
+# CORRECT - ratio of sums, traffic-weighted
+sum(rate(http_requests_total{code=~"5.."}[5m]))
+/
+sum(rate(http_requests_total[5m]))
+
+# The rule: sum the numerator, sum the denominator, then divide.</code></pre>
+      </section>
+      <section>
+        <h2>Label matching in binary operations</h2>
+        <p>When you combine two metrics, Prometheus matches series by their full label sets. Any label present on
+ one side and not the other causes the match to fail silently and return no data, which is the second most
+ common source of empty panels.</p>
+      <p class="code-label">Vector matching</p>
+      <pre><code># Fails: http_requests_total has code, method, route;
+# the denominator after sum() has none of them.
+rate(http_requests_total{code=~"5.."}[5m]) / sum(rate(http_requests_total[5m]))
+
+# Works: both sides are aggregated to the same label set
+sum by (route) (rate(http_requests_total{code=~"5.."}[5m]))
+/
+sum by (route) (rate(http_requests_total[5m]))
+
+# When the label sets genuinely differ, be explicit:
+#   on(...)     - match only on these labels
+#   ignoring(...) - match on everything except these
+#   group_left  - many-to-one: extra labels come from the LEFT side
+#   group_right - one-to-many: extra labels come from the RIGHT side
+
+# Classic use: join a metric with a metadata / "info" metric
+sum by (pod) (rate(container_cpu_usage_seconds_total[5m]))
+  * on(pod) group_left(app, team)
+    kube_pod_labels</code></pre>
+        <div class="callout">
+          <p>An empty Grafana panel is far more often a label-matching failure than a missing metric. Run each side of the division on its own in the query browser and compare their label sets before assuming the data is not there.</p>
+        </div>
+      </section>
+      <section>
+        <h2>Recording rules: precompute what you query often</h2>
+        <p>Any expression that appears on a dashboard many people load, or inside an alert evaluated every
+ fifteen seconds, should be a recording rule. This moves the cost from query time to ingest time, gives
+ every consumer identical arithmetic, and keeps dashboards fast when the range is a month.</p>
+      <p class="code-label">prometheus/rules/red.yml</p>
+      <pre><code>groups:
+  - name: service-red
+    interval: 30s
+    rules:
+      # Naming convention: level:metric:operations
+      #   level      - the aggregation level (job, route, cluster)
+      #   metric     - the underlying metric name
+      #   operations - what was applied, most recent first
+
+      - record: job:http_requests:rate5m
+        expr: sum by (job) (rate(http_requests_total[5m]))
+
+      - record: job:http_requests_errors:rate5m
+        expr: sum by (job) (rate(http_requests_total{code=~"5.."}[5m]))
+
+      - record: job:http_error_ratio:rate5m
+        expr: |
+          job:http_requests_errors:rate5m / job:http_requests:rate5m
+
+      - record: job_le:http_request_duration_seconds_bucket:rate5m
+        expr: |
+          sum by (job, le) (rate(http_request_duration_seconds_bucket[5m]))
+
+      - record: job:http_request_duration_seconds:p99
+        expr: |
+          histogram_quantile(0.99, job_le:http_request_duration_seconds_bucket:rate5m)</code></pre>
+        <ul>
+          <li>Rules within a group evaluate sequentially, so a later rule can safely depend on an earlier one in the same group.</li>
+          <li>Groups evaluate in parallel with each other, so a rule must never depend on a different group.</li>
+          <li>Set <code>interval</code> no shorter than your scrape interval; there is nothing to gain from evaluating faster than data arrives.</li>
+          <li>Keep the naming convention rigid. <code>level:metric:operations</code> makes it obvious at a glance whether a series is raw or derived.</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Choosing a good metric name</h2>
+      <p class="code-label">Naming that survives contact with a second team</p>
+      <pre><code># Convention:  &lt;namespace&gt;_&lt;subsystem&gt;_&lt;name&gt;_&lt;unit&gt;[_total]
+
+http_requests_total                      # counter, no unit needed
+http_request_duration_seconds            # histogram, base unit seconds
+http_response_size_bytes                 # histogram, base unit bytes
+process_resident_memory_bytes            # gauge
+queue_depth                              # gauge
+kafka_consumer_lag_messages              # gauge with an explicit unit
+
+# Anti-patterns seen in the wild:
+api_latency_ms          # use base units: seconds, not milliseconds
+requestCount            # use snake_case
+http_requests           # counters should end in _total
+errors                  # namespace it: myapp_http_errors_total
+cpu_usage_percent       # use a ratio 0-1, or expose the raw counter</code></pre>
+        <p>Always use base units &mdash; seconds and bytes &mdash; and let the dashboard handle presentation.
+ Mixed units across services turn every cross-service query into a unit-conversion puzzle, and someone will
+ eventually get it wrong during an incident.</p>
+      </section>
+      <section>
+        <h2>Queries that will bite you</h2>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th scope="col">Pattern</th><th scope="col">Problem</th><th scope="col">Instead</th></tr></thead>
+            <tbody>
+            <tr><td><code>sum(rate(x[5m]))</code> with no <code>by</code></td><td>Collapses everything into one number; you lose the ability to see which instance or route is at fault</td><td>Aggregate to the level you need: <code>sum by (route)</code></td></tr>
+            <tr><td><code>rate(x[1m])</code> with a 60s scrape</td><td>Only one sample in the window; returns empty or extremely noisy data</td><td>Window of at least 4x the scrape interval</td></tr>
+            <tr><td><code>topk()</code> inside an alert</td><td>Returns a different series set on each evaluation, so the alert flaps and never satisfies <code>for:</code></td><td>Alert on a threshold; use <code>topk</code> in the notification annotation or dashboard</td></tr>
+            <tr><td><code>{__name__=~".+"}</code></td><td>Matches every series in the database</td><td>Always anchor on a metric name and a job</td></tr>
+            <tr><td><code>increase(x[24h])</code> on a dashboard</td><td>Scans a full day of samples for every panel refresh</td><td>Use a recording rule computed at ingest</td></tr>
+            <tr><td><code>avg</code> of a <code>histogram_quantile</code></td><td>Averaging percentiles produces a meaningless number (Part 4)</td><td><code>sum by (le)</code> first, then one <code>histogram_quantile</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout lab">
+          <p>Hands-on: <code>labs/06-promql</code> in the <a href="https://github.com/ramchandra-guthula/sre-training-labs" target="_blank" rel="noreferrer">companion repo</a> has a seeded Prometheus with deliberately broken queries alongside their fixes, plus <code>promtool</code> unit tests for every recording rule above.</p>
+        </div>
+      </section>
+      <section class="key-takeaways">
+        <h2>Key takeaways</h2>
+        <ul>
+          <li>Counter for things that only go up, gauge for things that move both ways, histogram for anything you need percentiles of.</li>
+          <li>Never graph a raw counter. rate() and increase() exist because counters reset.</li>
+          <li>rate() before sum(), always. Aggregating counters before rating them corrupts reset handling.</li>
+          <li>Ratio of sums, never average of ratios.</li>
+          <li>Empty panels are usually label-matching failures, not missing data. Check both sides separately.</li>
+          <li>Move expensive and frequently used expressions into recording rules with the level:metric:operations naming convention.</li>
+          <li>Use base units - seconds and bytes - everywhere.</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Quick answers</h2>
+        <details class="faq-item">
+          <summary>When should I use irate instead of rate?</summary>
+          <p>Only for high-resolution debugging graphs where you want to see individual spikes. irate uses just the last two samples, so it is extremely sensitive to noise and will miss activity entirely when the graph step is larger than the scrape interval. Never use it in an alerting rule.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Why does my division return no data?</summary>
+          <p>Almost always vector matching. Prometheus matches series by their complete label sets, and if one side carries a label the other does not, nothing matches and you get an empty result. Run each side separately, compare the labels, and use on(), ignoring(), or group_left to reconcile them.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How long should my rate window be?</summary>
+          <p>At least four times the scrape interval so a missed scrape does not create a gap. With a 15-second scrape, 1m works and 5m is the safer default. Match the window across related queries so that graphs shown side by side are comparable.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Are summaries ever the right choice over histograms?</summary>
+          <p>Only when you need an accurate quantile from a single process and will never aggregate across replicas - a batch job or a CLI tool, for example. In any horizontally scaled service, summaries cannot be combined and histograms are the correct type.</p>
+        </details>
+      </section>
+    </article>
+
+    <nav class="series-nav" data-series-nav aria-label="Series navigation"></nav>
+
+    <aside class="article-footer-card">
+      <h2>Continue reading</h2>
+      <div class="mini-link-list" data-related-articles></div>
+    </aside>
+  </main>
+
+  <script src="../assets/js/site-data.js"></script>
+  <script src="../assets/js/script.js"></script>
+</body>
+</html>
