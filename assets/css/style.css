@@ -946,3 +946,43 @@ button {
     padding: 14px;
   }
 }
+
+.visitor-counter {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+
+.visitor-counter-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 3px rgba(141, 216, 182, 0.18);
+}
+
+.visitor-counter [data-visitor-count] {
+  color: var(--text);
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .visitor-counter {
+    left: 12px;
+    bottom: 12px;
+    padding: 6px 12px;
+    font-size: 0.75rem;
+  }
+}
