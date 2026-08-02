@@ -3,15 +3,127 @@
   <channel>
     <title>Ram Guthula</title>
     <link>https://www.ramguthula.com/</link>
-    <description>Cloud architecture, DevOps, Kubernetes, Terraform, and platform engineering articles from Ram Guthula.</description>
+    <description>Cloud architecture, DevOps, Kubernetes, Terraform, SRE, and platform engineering articles from Ram Guthula.</description>
     <language>en-us</language>
-    <lastBuildDate>Thu, 30 Apr 2026 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 27 Jul 2026 12:00:00 +0000</lastBuildDate>
+
+    <item>
+      <title>SRE Training Series: From Fundamentals to a Production LGTM Stack</title>
+      <link>https://www.ramguthula.com/articles/sre-training-series.html</link>
+      <guid>https://www.ramguthula.com/articles/sre-training-series.html</guid>
+      <pubDate>Mon, 27 Jul 2026 13:00:00 +0000</pubDate>
+      <description>A free 12-part Site Reliability Engineering course covering SLIs, SLOs, error budgets, percentiles, golden signals, PromQL, cardinality, logs, tracing, and building your own LGTM stack.</description>
+    </item>
+
+    <item>
+      <title>What Is SRE? Fundamentals, Error Budgets, and the SRE vs DevOps Question</title>
+      <link>https://www.ramguthula.com/articles/sre-01-what-is-sre.html</link>
+      <guid>https://www.ramguthula.com/articles/sre-01-what-is-sre.html</guid>
+      <pubDate>Mon, 27 Jul 2026 11:00:00 +0000</pubDate>
+      <description>A practical introduction to Site Reliability Engineering: what SREs actually do, how error budgets work, how SRE differs from DevOps, and how to measure toil.</description>
+    </item>
+
+    <item>
+      <title>SLI, SLO, and SLA Explained: Choosing Indicators That Reflect Real User Pain</title>
+      <link>https://www.ramguthula.com/articles/sre-02-sli-slo-sla.html</link>
+      <guid>https://www.ramguthula.com/articles/sre-02-sli-slo-sla.html</guid>
+      <pubDate>Mon, 27 Jul 2026 10:00:00 +0000</pubDate>
+      <description>How to define SLIs, SLOs, and SLAs correctly: the good-events over valid-events pattern, latency and availability SLIs, target selection, and rolling windows.</description>
+    </item>
+
+    <item>
+      <title>Error Budgets and Multi-Window Burn Rate Alerting</title>
+      <link>https://www.ramguthula.com/articles/sre-03-error-budgets-burn-rate.html</link>
+      <guid>https://www.ramguthula.com/articles/sre-03-error-budgets-burn-rate.html</guid>
+      <pubDate>Mon, 27 Jul 2026 09:00:00 +0000</pubDate>
+      <description>How to calculate and spend error budgets, and how to build multi-window multi-burn-rate alerts in Prometheus that page fast on real outages and stay quiet otherwise.</description>
+    </item>
+
+    <item>
+      <title>p50, p95, p99: Percentiles, Histograms, and Why Averages Lie</title>
+      <link>https://www.ramguthula.com/articles/sre-04-percentiles-p50-p95-p99.html</link>
+      <guid>https://www.ramguthula.com/articles/sre-04-percentiles-p50-p95-p99.html</guid>
+      <pubDate>Mon, 27 Jul 2026 08:00:00 +0000</pubDate>
+      <description>Understand latency percentiles p50, p90, p95, p99 and p99.9, how Prometheus histograms and quantiles work, why you cannot average percentiles, and how to pick bucket boundaries.</description>
+    </item>
+
+    <item>
+      <title>Four Golden Signals, USE, and RED: Utilization, Saturation, and Errors</title>
+      <link>https://www.ramguthula.com/articles/sre-05-golden-signals-use-red.html</link>
+      <guid>https://www.ramguthula.com/articles/sre-05-golden-signals-use-red.html</guid>
+      <pubDate>Mon, 27 Jul 2026 07:00:00 +0000</pubDate>
+      <description>A practical guide to the four golden signals, the USE method for resources, and the RED method for services, including utilization vs saturation and run-queue signals.</description>
+    </item>
+
+    <item>
+      <title>Metrics Fundamentals: Counters, Gauges, Histograms, and PromQL That Works</title>
+      <link>https://www.ramguthula.com/articles/sre-06-metrics-and-promql.html</link>
+      <guid>https://www.ramguthula.com/articles/sre-06-metrics-and-promql.html</guid>
+      <pubDate>Mon, 27 Jul 2026 06:00:00 +0000</pubDate>
+      <description>Prometheus metric types explained: counters, gauges, histograms and summaries, plus rate, increase, irate, aggregation order, recording rules and common PromQL mistakes.</description>
+    </item>
+
+    <item>
+      <title>Cardinality: Designing Labels That Do Not Bankrupt Your Observability Stack</title>
+      <link>https://www.ramguthula.com/articles/sre-07-cardinality.html</link>
+      <guid>https://www.ramguthula.com/articles/sre-07-cardinality.html</guid>
+      <pubDate>Mon, 27 Jul 2026 05:00:00 +0000</pubDate>
+      <description>How metric cardinality works, why user IDs and full URLs destroy Prometheus, how to budget series, and how to use exemplars, recording rules and relabeling to keep it under control.</description>
+    </item>
+
+    <item>
+      <title>Logs at Scale: Structured Logging, Loki, and LogQL</title>
+      <link>https://www.ramguthula.com/articles/sre-08-logs-and-loki.html</link>
+      <guid>https://www.ramguthula.com/articles/sre-08-logs-and-loki.html</guid>
+      <pubDate>Mon, 27 Jul 2026 04:00:00 +0000</pubDate>
+      <description>Structured logging practice plus Loki architecture, label design, LogQL queries, metric queries from logs, retention tiers, and how to correlate logs with metrics and traces.</description>
+    </item>
+
+    <item>
+      <title>Distributed Tracing with OpenTelemetry and Tempo</title>
+      <link>https://www.ramguthula.com/articles/sre-09-tracing-otel-tempo.html</link>
+      <guid>https://www.ramguthula.com/articles/sre-09-tracing-otel-tempo.html</guid>
+      <pubDate>Mon, 27 Jul 2026 03:00:00 +0000</pubDate>
+      <description>A practical OpenTelemetry and Grafana Tempo guide: spans, context propagation, semantic conventions, head vs tail sampling, span metrics, and exemplar-driven correlation.</description>
+    </item>
+
+    <item>
+      <title>Build Your Own LGTM Stack: Loki, Grafana, Tempo, and Mimir</title>
+      <link>https://www.ramguthula.com/articles/sre-10-build-your-own-lgtm-stack.html</link>
+      <guid>https://www.ramguthula.com/articles/sre-10-build-your-own-lgtm-stack.html</guid>
+      <pubDate>Mon, 27 Jul 2026 02:00:00 +0000</pubDate>
+      <description>Hands-on guide to running the Grafana LGTM stack: Loki, Grafana, Tempo, Mimir and Alloy with Docker Compose and Kubernetes, including OTel Collector and storage sizing.</description>
+    </item>
+
+    <item>
+      <title>Dashboards and Alerts That Work at 3 A.M.</title>
+      <link>https://www.ramguthula.com/articles/sre-11-dashboards-and-alerting.html</link>
+      <guid>https://www.ramguthula.com/articles/sre-11-dashboards-and-alerting.html</guid>
+      <pubDate>Mon, 27 Jul 2026 01:00:00 +0000</pubDate>
+      <description>How to design SLO dashboards and alert rules that reduce fatigue: symptom-based alerting, alert routing and grouping, runbook links, and dashboards structured for triage.</description>
+    </item>
+
+    <item>
+      <title>Incident Response, Postmortems, and Scaling the Reliability Practice</title>
+      <link>https://www.ramguthula.com/articles/sre-12-incident-response-and-scale.html</link>
+      <guid>https://www.ramguthula.com/articles/sre-12-incident-response-and-scale.html</guid>
+      <pubDate>Mon, 27 Jul 2026 00:00:00 +0000</pubDate>
+      <description>Incident command roles, severity levels, blameless postmortems, on-call health metrics, plus long-term storage, downsampling, and cost control for the observability platform.</description>
+    </item>
+
+    <item>
+      <title>Building an autonomous RCA agent with LangGraph and MCP</title>
+      <link>https://www.ramguthula.com/articles/rca-agent-langgraph-mcp.html</link>
+      <guid>https://www.ramguthula.com/articles/rca-agent-langgraph-mcp.html</guid>
+      <pubDate>Sun, 12 Jul 2026 12:00:00 +0000</pubDate>
+      <description>How a LangGraph-orchestrated agent triages Grafana Alertmanager alerts automatically via MCP tool integrations, and safely self-heals in Dev.</description>
+    </item>
 
     <item>
       <title>Terraform for Beginners: What to Learn First</title>
       <link>https://www.ramguthula.com/articles/terraform-for-beginners.html</link>
       <guid>https://www.ramguthula.com/articles/terraform-for-beginners.html</guid>
-      <pubDate>Thu, 30 Apr 2026 12:00:00 GMT</pubDate>
+      <pubDate>Thu, 30 Apr 2026 12:00:00 +0000</pubDate>
       <description>A practical beginner roadmap for learning Terraform, from providers and state to modules, environments, and team workflows.</description>
     </item>
 
@@ -19,7 +131,7 @@
       <title>Kubernetes on AWS: A Pragmatic Operating Model</title>
       <link>https://www.ramguthula.com/articles/kubernetes-on-aws.html</link>
       <guid>https://www.ramguthula.com/articles/kubernetes-on-aws.html</guid>
-      <pubDate>Thu, 30 Apr 2026 12:00:00 GMT</pubDate>
+      <pubDate>Thu, 30 Apr 2026 12:00:00 +0000</pubDate>
       <description>A practical operating model for Kubernetes on AWS, covering standardization, observability, ownership, security, and delivery guardrails.</description>
     </item>
 
@@ -27,8 +139,9 @@
       <title>Platform Engineering Best Practices That Actually Help</title>
       <link>https://www.ramguthula.com/articles/platform-engineering-best-practices.html</link>
       <guid>https://www.ramguthula.com/articles/platform-engineering-best-practices.html</guid>
-      <pubDate>Thu, 30 Apr 2026 12:00:00 GMT</pubDate>
+      <pubDate>Thu, 30 Apr 2026 12:00:00 +0000</pubDate>
       <description>Practical platform engineering best practices for building golden paths, self-service workflows, trust, and sustainable developer platforms.</description>
     </item>
+
   </channel>
 </rss>
