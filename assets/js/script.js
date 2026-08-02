@@ -139,9 +139,32 @@ window.addEventListener('hashchange', () => {
   showPage(pageName);
 });
 
+function renderVisitorCounter() {
+  const badge = document.createElement('div');
+  badge.className = 'visitor-counter';
+  badge.setAttribute('role', 'status');
+  badge.setAttribute('aria-label', 'Site visitor count');
+  badge.innerHTML =
+    '<span class="visitor-counter-dot"></span><span data-visitor-count>—</span><span class="visitor-counter-label">visitors</span>';
+  document.body.append(badge);
+
+  fetch('https://countapi.mileshilliard.com/api/v1/hit/ramguthula-com-site-visits')
+    .then((res) => (res.ok ? res.json() : Promise.reject(res)))
+    .then((data) => {
+      if (typeof data.value !== 'number') {
+        throw new Error('Unexpected visitor counter response');
+      }
+      badge.querySelector('[data-visitor-count]').textContent = data.value.toLocaleString();
+    })
+    .catch(() => {
+      badge.remove();
+    });
+}
+
 renderHomepageArticles();
 renderRelatedArticles();
 enableAnalytics();
+renderVisitorCounter();
 showPage(window.location.hash.replace('#', '') || 'about');
 
 /* ==========================================================================
