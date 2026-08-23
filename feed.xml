@@ -5,7 +5,15 @@
     <link>https://www.ramguthula.com/</link>
     <description>Cloud architecture, DevOps, Kubernetes, Terraform, SRE, and platform engineering articles from Ram Guthula.</description>
     <language>en-us</language>
-    <lastBuildDate>Mon, 27 Jul 2026 12:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 21 Aug 2026 12:00:00 GMT</lastBuildDate>
+
+    <item>
+      <title>Platform Engineering with Crossplane and Backstage</title>
+      <link>https://www.ramguthula.com/articles/platform-engineering-crossplane-backstage.html</link>
+      <guid>https://www.ramguthula.com/articles/platform-engineering-crossplane-backstage.html</guid>
+      <pubDate>Fri, 21 Aug 2026 12:00:00 GMT</pubDate>
+      <description>An overview and step-by-step install of an internal developer platform built on Crossplane and Backstage, with an ecosystem architecture diagram, GitOps wiring, and the developer-experience payoff.</description>
+    </item>
 
     <item>
       <title>SRE Training Series: From Fundamentals to a Production LGTM Stack</title>

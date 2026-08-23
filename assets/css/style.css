@@ -947,6 +947,29 @@ button {
   }
 }
 
+.diagram-frame {
+  margin: 18px 0 0;
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+  background: var(--card-alt);
+  overflow-x: auto;
+}
+
+.diagram-frame svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 720px;
+}
+
+.diagram-caption {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  text-align: center;
+}
+
 .visitor-counter {
   position: fixed;
   left: 20px;

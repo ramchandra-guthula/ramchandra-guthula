@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Platform Engineering with Crossplane and Backstage | Ram Guthula</title>
+<meta name="description" content="An overview and step-by-step install of an internal developer platform built on Crossplane and Backstage, with an ecosystem architecture diagram, GitOps wiring, and the developer-experience payoff.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0b1220">
+<link rel="canonical" href="https://www.ramguthula.com/articles/platform-engineering-crossplane-backstage.html">
+<link rel="alternate" type="application/rss+xml" title="Ram Guthula Feed" href="https://www.ramguthula.com/feed.xml">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Platform Engineering with Crossplane and Backstage">
+<meta property="og:description" content="How Backstage, Crossplane, and GitOps combine into a self-service internal developer platform — architecture, install steps, and the developer-experience payoff.">
+<meta property="og:url" content="https://www.ramguthula.com/articles/platform-engineering-crossplane-backstage.html">
+<meta property="og:image" content="https://www.ramguthula.com/github-header-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Platform Engineering with Crossplane and Backstage">
+<meta name="twitter:description" content="An internal developer platform built on Backstage, Crossplane, and GitOps — overview, architecture, and step-by-step install.">
+<meta name="twitter:image" content="https://www.ramguthula.com/github-header-image.png">
+<link rel="shortcut icon" href="../assets/images/logo.ico" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/style.css">
+<script type="application/ld+json">
+{
+"@context": "https://schema.org",
+"@type": "BlogPosting",
+"headline": "Platform Engineering with Crossplane and Backstage",
+"description": "An overview and step-by-step install of an internal developer platform built on Crossplane and Backstage, with an ecosystem architecture diagram, GitOps wiring, and the developer-experience payoff.",
+"author": {
+"@type": "Person",
+"name": "Ram Guthula"
+},
+"publisher": {
+"@type": "Person",
+"name": "Ram Guthula"
+},
+"mainEntityOfPage": "https://www.ramguthula.com/articles/platform-engineering-crossplane-backstage.html",
+"datePublished": "2026-08-21",
+"dateModified": "2026-08-21"
+}
+</script>
+</head>
+<body data-article-slug="platform-engineering-crossplane-backstage">
+<div class="page-shell"></div>
+<main class="article-layout">
+<header class="article-header-shell">
+<a class="back-link" href="../index.html#content">Back to home</a>
+<p class="section-kicker">Internal Developer Platforms</p>
+<h1>Platform engineering with Crossplane and Backstage</h1>
+<p class="article-standfirst">Most platform teams get one of two things right: a clean developer experience, or a solid infrastructure control plane. Crossplane and Backstage, wired together with GitOps, get both — one turns cloud infrastructure into a Kubernetes-native API, the other turns that API into a self-service portal. Here is the overview, the ecosystem architecture, and a step-by-step install.</p>
+<div class="article-meta">
+<span>By Ram Guthula</span>
+<span>August 21, 2026</span>
+<span>13 min read</span>
+</div>
+</header>
+
+<article class="article-body">
+
+<section>
+<h2>The problem: infrastructure requests still go through a queue</h2>
+<p>Ask a developer how they get a new database, and in most organizations the honest answer is still: open a ticket, wait, and hope the person who provisions it remembers all the tagging, encryption, and network rules from last time. That queue is not a tooling gap — teams already have Terraform, Helm, and CI/CD. It is an <em>interface</em> gap. Infrastructure-as-code made resources repeatable; it never made them self-service.</p>
+<p>Platform engineering closes that gap by giving developers a paved road: a catalog of approved things they can request themselves, with the guardrails already built in. Crossplane and Backstage are the two most common open-source building blocks for that road, and they solve different halves of the problem.</p>
+<div class="callout">
+<p>The short version: <strong>Backstage is the front door developers see. Crossplane is the control plane that makes their request real. GitOps is the hinge that connects the two safely.</strong></p>
+</div>
+</section>
+
+<section>
+<h2>What each piece actually does</h2>
+<ul>
+<li><strong>Backstage</strong> — a CNCF-graduated developer portal. Its <strong>Software Catalog</strong> tracks every service and its owner, <strong>TechDocs</strong> keeps documentation next to the code it describes, and the <strong>Scaffolder</strong> turns a form into a pull request. Backstage does not provision anything itself — it produces the request.</li>
+<li><strong>Crossplane</strong> — a Kubernetes extension that turns the Kubernetes API into a control plane for anything, not just pods. Providers (for AWS, Azure, GCP, and dozens of others) add CRDs for real cloud resources. Compositions let a platform team define a simplified abstraction — "PostgreSQLInstance" — that expands into the ten or so real resources it actually needs (the database, a security group, a parameter group, IAM, backups).</li>
+<li><strong>GitOps (Argo CD / Flux)</strong> — the delivery mechanism that keeps the two in sync. It watches a Git repository and continuously reconciles the cluster to match it, so "merged to main" and "running in the cluster" never drift apart.</li>
+</ul>
+<p>None of these tools is aware of the other two by design. That separation is the whole point: Backstage never touches a kubeconfig, Crossplane never touches Git, and the GitOps controller is the only thing with write access to the cluster. Each piece can be swapped without the others noticing.</p>
+</section>
+
+<section>
+<h2>The ecosystem architecture</h2>
+<p>The diagram below is the shape almost every Crossplane-plus-Backstage platform converges on. A developer never files a ticket and never writes YAML by hand — they fill out a form, and everything from that point on is machine-to-machine.</p>
+
+<div class="diagram-frame">
+<svg viewBox="0 0 1160 700" role="img" aria-labelledby="idpArchTitle idpArchDesc" xmlns="http://www.w3.org/2000/svg">
+<title id="idpArchTitle">Crossplane and Backstage internal developer platform architecture</title>
+<desc id="idpArchDesc">A developer submits a Backstage Scaffolder template, which opens a pull request containing a Crossplane claim and a catalog-info.yaml file to a Git repository. A GitOps controller such as Argo CD or Flux watches the repository and applies the merged manifests to the Kubernetes API server. Crossplane reconciles the claim into a composite resource and managed resources, which are created by provider-aws, provider-azure, provider-gcp, or provider-kubernetes against real cloud APIs. Status and connection secrets flow back up through Crossplane and the Kubernetes API to the Backstage Kubernetes plugin, closing the loop back to the developer portal.</desc>
+<defs>
+<marker id="arrowAccent" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+<path d="M0,0 L10,5 L0,10 Z" fill="#f4b860"></path>
+</marker>
+<marker id="arrowSuccess" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+<path d="M0,0 L10,5 L0,10 Z" fill="#8dd8b6"></path>
+</marker>
+</defs>
+
+<!-- Developer -->
+<rect x="460" y="20" width="240" height="56" rx="14" fill="#101b2f" stroke="#f4b860" stroke-width="1.5"></rect>
+<text x="580" y="43" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="14" font-weight="600" fill="#ecf3ff">Developer</text>
+<text x="580" y="61" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="11" fill="#a8b6d4">Fills out a self-service form</text>
+
+<line x1="580" y1="76" x2="580" y2="108" stroke="#f4b860" stroke-width="1.5" marker-end="url(#arrowAccent)"></line>
+<text x="596" y="97" font-family="Space Grotesk, sans-serif" font-size="10.5" fill="#93a6ca">1 &#183; submits template</text>
+
+<!-- Backstage portal -->
+<rect x="140" y="110" width="880" height="100" rx="16" fill="#0e1829" stroke="rgba(156,178,215,0.3)" stroke-width="1.5"></rect>
+<text x="580" y="132" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="15" font-weight="700" fill="#f4b860">Backstage Developer Portal</text>
+<rect x="160" y="150" width="260" height="42" rx="10" fill="rgba(120,150,210,0.12)" stroke="rgba(156,178,215,0.2)"></rect>
+<text x="290" y="176" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="12" fill="#dce7ff">Software Catalog</text>
+<rect x="450" y="150" width="260" height="42" rx="10" fill="rgba(120,150,210,0.12)" stroke="rgba(156,178,215,0.2)"></rect>
+<text x="580" y="176" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="12" fill="#dce7ff">Scaffolder Templates</text>
+<rect x="740" y="150" width="260" height="42" rx="10" fill="rgba(120,150,210,0.12)" stroke="rgba(156,178,215,0.2)"></rect>
+<text x="870" y="176" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="12" fill="#dce7ff">TechDocs</text>
+
+<line x1="580" y1="210" x2="580" y2="248" stroke="#f4b860" stroke-width="1.5" marker-end="url(#arrowAccent)"></line>
+<text x="596" y="233" font-family="Space Grotesk, sans-serif" font-size="10.5" fill="#93a6ca">2 &#183; opens a PR: claim + catalog-info.yaml</text>
+
+<!-- Git repo + GitOps controller -->
+<rect x="140" y="250" width="400" height="70" rx="14" fill="#101b2f" stroke="rgba(156,178,215,0.3)"></rect>
+<text x="340" y="278" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="13.5" font-weight="600" fill="#ecf3ff">Git Repository</text>
+<text x="340" y="296" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="11" fill="#a8b6d4">Claim YAML, reviewed like code</text>
+
+<rect x="620" y="250" width="400" height="70" rx="14" fill="#101b2f" stroke="rgba(156,178,215,0.3)"></rect>
+<text x="820" y="273" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="13.5" font-weight="600" fill="#ecf3ff">GitOps Controller</text>
+<text x="820" y="290" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="11" fill="#a8b6d4">Argo CD / Flux &#8212; watch, sync, self-heal</text>
+
+<line x1="540" y1="285" x2="618" y2="285" stroke="#f4b860" stroke-width="1.5" marker-end="url(#arrowAccent)"></line>
+
+<line x1="820" y1="320" x2="820" y2="358" stroke="#f4b860" stroke-width="1.5" marker-end="url(#arrowAccent)"></line>
+<text x="700" y="343" font-family="Space Grotesk, sans-serif" font-size="10.5" fill="#93a6ca">3 &#183; merge triggers sync &#183; 4 &#183; applies manifests</text>
+
+<!-- Kubernetes API server -->
+<rect x="140" y="360" width="880" height="60" rx="14" fill="#0e1829" stroke="rgba(156,178,215,0.3)"></rect>
+<text x="580" y="396" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="14" font-weight="600" fill="#ecf3ff">Kubernetes API Server &#8212; the universal control-plane interface</text>
+
+<line x1="580" y1="420" x2="580" y2="448" stroke="#f4b860" stroke-width="1.5" marker-end="url(#arrowAccent)"></line>
+<text x="596" y="438" font-family="Space Grotesk, sans-serif" font-size="10.5" fill="#93a6ca">5 &#183; Crossplane reconciles the claim</text>
+
+<!-- Crossplane control plane -->
+<rect x="140" y="450" width="880" height="112" rx="16" fill="#0e1829" stroke="#ff8f3d" stroke-width="1.5"></rect>
+<text x="580" y="472" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="15" font-weight="700" fill="#ff8f3d">Crossplane Control Plane</text>
+<rect x="160" y="490" width="250" height="44" rx="10" fill="rgba(120,150,210,0.12)" stroke="rgba(156,178,215,0.2)"></rect>
+<text x="285" y="517" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="12" fill="#dce7ff">XRD (API schema)</text>
+<line x1="410" y1="512" x2="443" y2="512" stroke="#93a6ca" stroke-width="1.2" marker-end="url(#arrowAccent)"></line>
+<rect x="445" y="490" width="250" height="44" rx="10" fill="rgba(120,150,210,0.12)" stroke="rgba(156,178,215,0.2)"></rect>
+<text x="570" y="517" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="12" fill="#dce7ff">Composition</text>
+<line x1="695" y1="512" x2="728" y2="512" stroke="#93a6ca" stroke-width="1.2" marker-end="url(#arrowAccent)"></line>
+<rect x="730" y="490" width="250" height="44" rx="10" fill="rgba(120,150,210,0.12)" stroke="rgba(156,178,215,0.2)"></rect>
+<text x="855" y="517" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="12" fill="#dce7ff">Managed Resources</text>
+
+<line x1="580" y1="562" x2="230" y2="598" stroke="#f4b860" stroke-width="1.4" marker-end="url(#arrowAccent)"></line>
+<line x1="580" y1="562" x2="460" y2="598" stroke="#f4b860" stroke-width="1.4" marker-end="url(#arrowAccent)"></line>
+<line x1="580" y1="562" x2="690" y2="598" stroke="#f4b860" stroke-width="1.4" marker-end="url(#arrowAccent)"></line>
+<line x1="580" y1="562" x2="910" y2="598" stroke="#f4b860" stroke-width="1.4" marker-end="url(#arrowAccent)"></line>
+<text x="580" y="580" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="10.5" fill="#93a6ca">6 &#183; composition selects provider(s)</text>
+
+<!-- Providers row -->
+<rect x="150" y="600" width="200" height="70" rx="12" fill="#101b2f" stroke="rgba(156,178,215,0.3)"></rect>
+<text x="250" y="628" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="12.5" font-weight="600" fill="#ecf3ff">provider-aws</text>
+<text x="250" y="646" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="10.5" fill="#a8b6d4">RDS &#183; S3 &#183; IAM</text>
+
+<rect x="380" y="600" width="200" height="70" rx="12" fill="#101b2f" stroke="rgba(156,178,215,0.3)"></rect>
+<text x="480" y="628" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="12.5" font-weight="600" fill="#ecf3ff">provider-azure</text>
+<text x="480" y="646" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="10.5" fill="#a8b6d4">AKS &#183; Storage &#183; Key Vault</text>
+
+<rect x="610" y="600" width="200" height="70" rx="12" fill="#101b2f" stroke="rgba(156,178,215,0.3)"></rect>
+<text x="710" y="628" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="12.5" font-weight="600" fill="#ecf3ff">provider-gcp</text>
+<text x="710" y="646" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="10.5" fill="#a8b6d4">Cloud SQL &#183; GCS</text>
+
+<rect x="840" y="600" width="200" height="70" rx="12" fill="#101b2f" stroke="rgba(156,178,215,0.3)"></rect>
+<text x="940" y="628" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="12.5" font-weight="600" fill="#ecf3ff">provider-kubernetes</text>
+<text x="940" y="646" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="10.5" fill="#a8b6d4">Helm &#183; namespaces &#183; RBAC</text>
+
+<!-- Feedback loop -->
+<path d="M 1040 620 C 1130 620, 1130 160, 1030 150" fill="none" stroke="#8dd8b6" stroke-width="1.5" stroke-dasharray="6 5" marker-end="url(#arrowSuccess)"></path>
+<text x="1000" y="400" font-family="Space Grotesk, sans-serif" font-size="10.5" fill="#8dd8b6" transform="rotate(90 1000 400)" text-anchor="middle">7 &#183; status &amp; connection secrets stream back</text>
+</svg>
+</div>
+<p class="diagram-caption">Backstage originates the request, Git and the GitOps controller carry it, and Crossplane executes it — status flows back through the same path, so the catalog always reflects reality.</p>
+
+<p>Reading the diagram left to right in time: a developer fills out a Scaffolder form (1); the Scaffolder's <code>publish:github</code> action opens a pull request containing a Crossplane claim and a <code>catalog-info.yaml</code> (2); once reviewed and merged, the GitOps controller notices the change (3) and applies it to the cluster (4); the Kubernetes API server accepts the claim and Crossplane reconciles it (5) through an XRD, a Composition, and the managed resources the Composition expands into; the Composition selects the right provider for the target cloud (6); and as those managed resources come up, their status and any generated connection secrets stream back up through Crossplane and the Kubernetes API to the Backstage Kubernetes plugin (7), which is what flips the catalog entry to "Ready."</p>
+</section>
+
+<section>
+<h2>Where GitOps fits: Git as the control point</h2>
+<p>It's tempting to draw Backstage talking directly to the cluster — the Scaffolder is, after all, capable of running arbitrary actions. Nearly every production setup deliberately avoids that shortcut, and the reason is GitOps.</p>
+<p>Argo CD or Flux sitting between the repo and the cluster turns three loose tools into one accountable system:</p>
+<ul>
+<li><strong>Git becomes the approval gate.</strong> The Scaffolder never has cluster credentials — it only has permission to open a pull request. A human (or a policy bot) reviews the actual claim before anything reaches Kubernetes. That single fact is usually what gets a self-service platform past a security review.</li>
+<li><strong>The cluster can't drift silently.</strong> Argo CD and Flux both continuously reconcile — if someone <code>kubectl edit</code>s a claim directly, or a resource is deleted out-of-band, the controller notices the live state no longer matches Git and either reports it or reverts it, depending on whether auto-sync and self-heal are enabled.</li>
+<li><strong>Rollback is <code>git revert</code>.</strong> Because the claim, the Composition selection, and the environment overlay all live in Git, undoing a bad change is the same operation every engineer already knows, not a separate infrastructure incident process.</li>
+<li><strong>Promotion is a directory, not a rewrite.</strong> The common pattern is one claims repo with a folder per environment (<code>dev/</code>, <code>staging/</code>, <code>prod/</code>) or an Argo CD <em>app-of-apps</em> per cluster. Promoting a change from staging to prod is copying a file between folders and opening a PR, not re-deriving it.</li>
+</ul>
+<p>Concretely, that means the "provider" your Composition targets and the size of the database a developer can request are policy decisions enforced at two layers at once: the Composition schema (what's structurally possible) and the Git branch protection rules (who can approve what, for which environment). Crossplane never has to know about approvals — it only ever reconciles what's already merged.</p>
+</section>
+
+<section>
+<h2>Step-by-step installation</h2>
+
+<h3>1. Prerequisites</h3>
+<p>You need a running Kubernetes cluster (a local <code>kind</code> cluster is enough to follow along; EKS/AKS/GKE for anything real), <code>kubectl</code>, Helm 3, cloud credentials for whichever provider you're targeting, and Node.js 20+ for the Backstage app.</p>
+
+<h3>2. Install Crossplane</h3>
+<p class="code-label">Terminal</p>
+<pre><code>helm repo add crossplane-stable https://charts.crossplane.io/stable
+helm repo update
+
+helm install crossplane crossplane-stable/crossplane \
+  --namespace crossplane-system --create-namespace
+
+kubectl get pods -n crossplane-system</code></pre>
+
+<h3>3. Install a provider and configure credentials</h3>
+<p>Providers are themselves packages that Crossplane installs and manages. This example targets AWS.</p>
+<p class="code-label">provider-aws.yaml</p>
+<pre><code>apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-aws-rds
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-rds:v1
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aws-creds
+  namespace: crossplane-system
+type: Opaque
+stringData:
+  creds: |
+    [default]
+    aws_access_key_id = &lt;redacted&gt;
+    aws_secret_access_key = &lt;redacted&gt;
+
+---
+apiVersion: aws.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: default
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: crossplane-system
+      name: aws-creds
+      key: creds</code></pre>
+<pre><code>kubectl apply -f provider-aws.yaml
+kubectl get providers</code></pre>
+
+<h3>4. Define the abstraction: an XRD and a Composition</h3>
+<p>This is the platform team's actual product: a simplified API that hides the ten AWS resources a real Postgres instance needs behind one developer-facing kind.</p>
+<p class="code-label">xrd-postgresql.yaml</p>
+<pre><code>apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xpostgresqlinstances.platform.example.org
+spec:
+  group: platform.example.org
+  names:
+    kind: XPostgreSQLInstance
+    plural: xpostgresqlinstances
+  claimNames:
+    kind: PostgreSQLInstance
+    plural: postgresqlinstances
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                parameters:
+                  type: object
+                  properties:
+                    storageGB:
+                      type: integer
+                    environment:
+                      type: string
+                      enum: ["dev", "staging", "prod"]
+                  required: ["storageGB", "environment"]
+              required: ["parameters"]</code></pre>
+<p>The Composition behind it is where guardrails live: mandatory tags, encryption at rest, private-subnet-only networking, and an instance-size ceiling for <code>dev</code> claims — none of which the developer ever sees or can override.</p>
+
+<h3>5. Install Backstage</h3>
+<p class="code-label">Terminal</p>
+<pre><code>npx @backstage/create-app@latest --path my-idp
+cd my-idp
+yarn install
+yarn dev</code></pre>
+
+<h3>6. Add the Kubernetes plugin so claim status shows up in the portal</h3>
+<pre><code>yarn --cwd packages/app add @backstage/plugin-kubernetes
+yarn --cwd packages/backend add @backstage/plugin-kubernetes-backend</code></pre>
+<p>Then point <code>app-config.yaml</code> at the cluster and label-select for the Composite Resources the Composition creates, so each catalog entry's Kubernetes tab shows the claim's live status and conditions.</p>
+
+<h3>7. Build the golden-path Scaffolder template</h3>
+<p>The template takes <code>environment</code> and <code>storageGB</code> as form inputs, renders a <code>PostgreSQLInstance</code> claim plus a <code>catalog-info.yaml</code>, and uses the <code>publish:github</code> action to open a pull request against the claims repo — no cluster access required from Backstage at any point.</p>
+
+<h3>8. Wire GitOps</h3>
+<p class="code-label">Terminal</p>
+<pre><code>helm repo add argo https://argoproj.github.io/argo-helm
+helm install argocd argo/argo-cd -n argocd --create-namespace
+
+argocd app create platform-claims \
+  --repo https://github.com/your-org/platform-claims.git \
+  --path environments/dev \
+  --dest-server https://kubernetes.default.svc \
+  --dest-namespace default \
+  --sync-policy automated \
+  --self-heal</code></pre>
+
+<h3>9. Verify the golden path end to end</h3>
+<p>Fill out the form in Backstage, approve the resulting PR, merge it, and watch: Argo CD syncs within its poll interval, Crossplane reconciles the claim into a real RDS instance, and the catalog entry's Kubernetes tab flips to <strong>Ready</strong> with the generated connection secret name attached. That whole loop, once wired, typically runs in minutes rather than the days a ticket queue takes.</p>
+</section>
+
+<section>
+<h2>What this actually changes for developers</h2>
+<p>The architecture is the means; the point is what it removes from a developer's day.</p>
+<ul>
+<li><strong>Time-to-first-database drops from days to minutes</strong> because provisioning is no longer a queue behind a human, it's a reconciliation loop behind a form.</li>
+<li><strong>Guardrails are structural, not procedural.</strong> A developer requesting a <code>dev</code> database physically cannot request an unencrypted instance or a public subnet, because those options were never exposed by the Composition. Compliance stops being a review step and becomes a property of the abstraction.</li>
+<li><strong>Ownership and docs live in one place.</strong> The Software Catalog answers "who owns this and where are the docs" for every service, and TechDocs keeps the answer next to the code instead of in a wiki that drifts out of date.</li>
+<li><strong>Everything is auditable by construction.</strong> Every infrastructure change is a merged pull request with a named approver, which is exactly the evidence trail SOC 2 and internal audits ask for — without anyone building a separate audit system.</li>
+<li><strong>The platform team scales by adding templates, not headcount.</strong> A new kind of infrastructure is a new XRD, Composition, and Scaffolder template — the Backstage UI a developer already knows doesn't change shape.</li>
+</ul>
+</section>
+
+<section>
+<h2>Who owns what in the stack</h2>
+<div class="table-scroll">
+<table>
+<thead><tr><th scope="col">Layer</th><th scope="col">Owns</th><th scope="col">Concrete example</th></tr></thead>
+<tbody>
+<tr><td>Backstage</td><td>Developer experience: catalog, docs, self-service intake</td><td>Scaffolder template, TechDocs page</td></tr>
+<tr><td>Git repository</td><td>Source of truth, review, and audit trail</td><td>PR containing the Crossplane claim</td></tr>
+<tr><td>GitOps controller</td><td>Continuous reconciliation from Git to cluster</td><td>Argo CD auto-sync, drift detection, self-heal</td></tr>
+<tr><td>Kubernetes API server</td><td>Universal control-plane interface, RBAC, admission</td><td>CRDs for every claim and managed resource</td></tr>
+<tr><td>Crossplane</td><td>Translates declarative intent into real infrastructure</td><td>XRD, Composition, managed resource</td></tr>
+<tr><td>Cloud provider APIs</td><td>The actual infrastructure</td><td>RDS instance, S3 bucket, IAM role</td></tr>
+</tbody>
+</table>
+</div>
+<div class="callout warn">
+<p><strong>The most common mistake</strong> is letting developers edit or apply Crossplane claims directly instead of only through the Scaffolder template. The moment someone can hand-write a claim and <code>kubectl apply</code> it, every guardrail the Composition was supposed to enforce becomes optional. Keep cluster write access limited to the GitOps controller, full stop.</p>
+</div>
+</section>
+
+<section class="key-takeaways">
+<h2>Key takeaways</h2>
+<ul>
+<li>Backstage owns the developer-facing request; Crossplane owns turning that request into real infrastructure; GitOps is the accountable hinge between them.</li>
+<li>Crossplane's XRDs and Compositions let a platform team define a simplified, guarded API that hides the real resource graph from developers.</li>
+<li>GitOps makes every infrastructure change a reviewable pull request, gives you drift correction for free, and turns rollback into <code>git revert</code>.</li>
+<li>Guardrails belong in the Composition schema, not in developer discipline — if an option is unsafe, don't expose it.</li>
+<li>Never let developers apply claims directly to the cluster; the Scaffolder template and the GitOps controller should be the only paths in.</li>
+</ul>
+</section>
+
+<section>
+<h2>Quick answers</h2>
+<details class="faq-item">
+<summary>Do application developers need to learn Kubernetes to use this?</summary>
+<p>No. They fill out a form in Backstage. Kubernetes, Crossplane, and the GitOps controller are implementation details of the golden path, not something the requester ever has to understand or touch.</p>
+</details>
+<details class="faq-item">
+<summary>Does Crossplane replace Terraform?</summary>
+<p>Not usually. Most platforms run both: Terraform for foundational infrastructure that changes rarely (VPCs, account boundaries, IAM guardrails), and Crossplane for the day-2 self-service layer developers request often — because Crossplane resources are native Kubernetes objects that reconcile continuously, instead of running on a scheduled apply.</p>
+</details>
+<details class="faq-item">
+<summary>Can I use something other than Backstage as the front end?</summary>
+<p>Yes. Crossplane just exposes a Kubernetes API — Backstage is the most common CNCF-graduated choice, but the same claims work behind a plain PR-based workflow, a commercial IDP like Port or Humanitec, or a custom internal UI.</p>
+</details>
+</section>
+
+<section>
+<h2>Best next step</h2>
+<p>Pick one infrastructure request your team gets most often — a database, a queue, a namespace with sane defaults — and build the full loop for that one thing first: XRD, Composition, Scaffolder template, GitOps sync. Prove the golden path end to end before generalizing it into a platform.</p>
+<p><a href="../index.html#contact">Reach out if you want to talk through a Crossplane and Backstage rollout</a></p>
+</section>
+
+</article>
+
+<aside class="article-footer-card">
+<h2>Continue reading</h2>
+<div class="mini-link-list" data-related-articles></div>
+</aside>
+</main>
+<script src="../assets/js/site-data.js"></script>
+<script src="../assets/js/script.js"></script>
+</body>
+</html>
