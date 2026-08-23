@@ -5,7 +5,15 @@
     <link>https://www.ramguthula.com/</link>
     <description>Cloud architecture, DevOps, Kubernetes, Terraform, and platform engineering articles from Ram Guthula.</description>
     <language>en-us</language>
-    <lastBuildDate>Thu, 30 Apr 2026 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 21 Aug 2026 12:00:00 GMT</lastBuildDate>
+
+    <item>
+      <title>Platform Engineering with Crossplane and Backstage</title>
+      <link>https://www.ramguthula.com/articles/platform-engineering-crossplane-backstage.html</link>
+      <guid>https://www.ramguthula.com/articles/platform-engineering-crossplane-backstage.html</guid>
+      <pubDate>Fri, 21 Aug 2026 12:00:00 GMT</pubDate>
+      <description>An overview and step-by-step install of an internal developer platform built on Crossplane and Backstage, with an ecosystem architecture diagram, GitOps wiring, and the developer-experience payoff.</description>
+    </item>
 
     <item>
       <title>Terraform for Beginners: What to Learn First</title>
